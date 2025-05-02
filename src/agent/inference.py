@@ -10,9 +10,9 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO
 
 n_rerolls = 3
-timesteps=1000000
+timesteps=100000
 n_log_interval=10000
-debug=False
+debug=True
 
 experiment_dir = "experiments"
 model_path = "model.zip"
@@ -26,14 +26,14 @@ model = PPO.load(path_zip, env=env, tensorboard_log=experiment_dir)
 
 obs, info = env.reset()
 
-max_roll = obs["dices"].max(axis=1).sum()
+max_roll = obs["dice_faces"].max(axis=1).sum()
 
 print("\n======== Starting inference ========")
 print("Steps", timesteps, "| Rerolls / turn", n_rerolls)
 
 if debug:
     print("Max roll", max_roll)
-    print("Dices\n", obs["dices"])
+    print("Dices\n", obs["dice_faces"])
 
 p_diffs = []
 
@@ -45,22 +45,22 @@ for i in range(timesteps):
     obs, reward, terminated, truncated, info = env.step(action)
 
     # round to 2 decimal places
-    p_diff = (obs["roll_results_totals"][0] - max_roll) / max_roll * 100
+    p_diff = (obs["roll_results_totals"].sum() - max_roll) / max_roll * 100
     p_diff = round(p_diff, 2)
 
     if debug:
-        print(i, "| Action", action, "| Roll results", obs["roll_results"], "| Roll total", obs["roll_results_totals"][0], "| Remaining rolls", obs["n_remaining_rolls"][0], "| Reward", reward, "| % diff", p_diff)
+        print(i, "| Action", action, "| Roll results", obs["roll_results"], "| Roll total", obs["roll_results_totals"], "| Remaining rolls", obs["n_remaining_rolls"][0], "| Reward", reward, "| % diff", p_diff)
 
     if terminated or truncated:
         p_diffs.append(p_diff)
 
         obs, info = env.reset()
 
-        max_roll = obs["dices"].max(axis=1).sum()
+        max_roll = obs["dice_faces"].max(axis=1).sum()
 
         if debug:
             print("\n======== Resetting environment ========\n", "Max roll", max_roll)
-            print("Dices\n", obs["dices"])
+            print("Dices\n", obs["dice_faces"])
 
 env.close()
 

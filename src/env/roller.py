@@ -1,18 +1,30 @@
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
+from enum import Enum
 
 N_ACTIONS = 6
 N_DICES = 6
 N_DICE_FACES = 6
+N_DICE_TYPES = 2
+N_MAX_FACE_VALUE = 20
+N_MIN_FACE_VALUE = 1
+N_MAX_ROLLS = 3
+
+MAX_ROLL = N_DICES * N_MAX_FACE_VALUE / 2
+MIN_ROLL = N_DICES * N_MIN_FACE_VALUE / 2
+
+class DiceType(Enum):
+    ATTACK = 0
+    DEFENSE = 1
 
 class Roller():
-    n_max_rolls = 3
-    n_remaining_rolls = 3
-    n_dices = 6
-    n_faces = 6
-    n_max_face_value = 20
-    n_min_face_value = 1
+    n_max_rolls = N_MAX_ROLLS
+    n_remaining_rolls = N_MAX_ROLLS
+    n_dices = N_DICES
+    n_faces = N_DICE_FACES
+    n_max_face_value = N_MAX_FACE_VALUE
+    n_min_face_value = N_MIN_FACE_VALUE
 
     dices = dict()
     roll_results = []
@@ -58,7 +70,8 @@ class Roller():
 
     def roll_dice(self, dice_i):
         face_i = np.random.randint(0, self.n_faces)
-        face = self.dices[dice_i][face_i]
+        dice = self.dices[dice_i]
+        face = dice["faces"][face_i]
 
         return face
 
@@ -68,12 +81,17 @@ class Roller():
     # generators ===============================================
     def generate_dices(self):
         for i in range(self.n_dices):
-            new_dice = self.generate_dice()
+            new_dice = self.generate_dice(i)
             self.dices[i] = new_dice
 
-    def generate_dice(self):
+    def generate_dice(self, i):
         faces = self.generate_dice_faces()
-        return faces
+        dice_type = DiceType.ATTACK if i < self.n_dices // 2 else DiceType.DEFENSE
+
+        return dict(
+            faces=faces,
+            dice_type=dice_type
+        )
 
     def generate_dice_faces(self):
         faces = []
@@ -88,34 +106,46 @@ class Roller():
     
     # getters ===============================================
     def get_roll_results_totals(self):
-        roll_results_totals = 0
+        attack_total = 0
+        defense_total = 0
 
-        for face in self.roll_results:
-            roll_results_totals += face
+        for i, face in enumerate(self.roll_results):
+            dice_type = self.dices[i]["dice_type"]
 
-        return roll_results_totals
+            if dice_type == DiceType.ATTACK:
+                attack_total += face
+            elif dice_type == DiceType.DEFENSE:
+                defense_total += face
+
+        return np.array([float(attack_total), float(defense_total)], dtype=np.float16)
     
     def get_dices(self):
         dices = []
+        dice_types = []
 
         for dice in self.dices:
+            dice = self.dices[dice]
+
+            dice_type = dice["dice_type"].value
             dice_faces = []
 
-            for face in self.dices[dice]:
+            for face in dice["faces"]:
                 dice_faces.append(face)
 
             dices.append(dice_faces)
+            dice_types.append(dice_type)
 
-        return np.array(dices, dtype=np.int8)
+        return np.array(dices, dtype=np.int8), np.array(dice_types, dtype=np.int8)
 
     def get_observation(self, play_hand=False):
         roll_results_totals = self.get_roll_results_totals()
-        dices = self.get_dices()
+        dice_faces, dice_types = self.get_dices()
 
         return dict(
-            dices=dices,
+            dice_faces=dice_faces,
+            dice_types=dice_types,
             roll_results=np.array(self.roll_results, dtype=np.int8),
-            roll_results_totals=np.array([float(roll_results_totals)], dtype=np.float16),
+            roll_results_totals=roll_results_totals,
             n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
         ), play_hand
 
@@ -129,14 +159,40 @@ class RollerEnv(gym.Env):
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
-            "dices": spaces.Box(low=0, high=100, shape=(N_DICES, N_DICE_FACES), dtype=np.int8),
-            "roll_results": spaces.Box(low=0, high=100, shape=(N_DICES,), dtype=np.int8),
-            "roll_results_totals": spaces.Box(low=0, high=255, shape=(1,), dtype=np.float16),
-            "n_remaining_rolls": spaces.Box(low=0, high=100, shape=(1,), dtype=np.int8),
+            "dice_faces": spaces.Box(
+                low=N_MIN_FACE_VALUE,
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES, N_DICE_FACES),
+                dtype=np.int8
+            ),
+            "dice_types": spaces.Box(
+                low=0,
+                high=N_DICE_TYPES,
+                shape=(N_DICES,),
+                dtype=np.int8
+            ),
+            "roll_results": spaces.Box(
+                low=N_MIN_FACE_VALUE,
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES,),
+                dtype=np.int8
+            ),
+            "roll_results_totals": spaces.Box(
+                low=MIN_ROLL,
+                high=MAX_ROLL,
+                shape=(2,),
+                dtype=np.float16
+            ),
+            "n_remaining_rolls": spaces.Box(
+                low=0,
+                high=N_MAX_ROLLS,
+                shape=(1,),
+                dtype=np.int8
+            ),
         })
 
         self.roller = Roller()
-        self.last_roll_results_totals = 0.
+        self.last_roll_results_totals = [0., 0.]
 
     def step(self, action):
         info = {}
@@ -145,11 +201,12 @@ class RollerEnv(gym.Env):
 
         obs, play_hand = self.roller.roll_dices(action)
 
-        reward = float(obs["roll_results_totals"][0]) - self.last_roll_results_totals
+        diff = obs["roll_results_totals"] - self.last_roll_results_totals
+        reward = float(diff.sum())
 
         n_remaining_rolls = obs["n_remaining_rolls"][0]
 
-        self.last_roll_results_totals = obs["roll_results_totals"][0]
+        self.last_roll_results_totals = obs["roll_results_totals"]
 
         if play_hand or n_remaining_rolls == 0:
             terminated = True
@@ -161,7 +218,7 @@ class RollerEnv(gym.Env):
         info = {}
 
         obs, play_hand = self.roller.reset()
-        self.last_roll_results_totals = float(obs["roll_results_totals"][0])
+        self.last_roll_results_totals = obs["roll_results_totals"]
 
         return obs, info
 
