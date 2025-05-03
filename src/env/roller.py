@@ -4,7 +4,9 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from src.env.game import Game, N_ACTIONS, N_DICES, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, N_DICE_TYPES, N_MAX_ROLLS, MIN_ROLL, MAX_ROLL, MAX_ENEMY_HP, WinnerType
+from src.env.game import Game, N_ACTIONS, N_DICES, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, N_DICE_TYPES, \
+    N_MAX_ROLLS, MIN_ROLL, MAX_ROLL, MAX_ENEMY_HP, WinnerType, N_TRAITS, EffectType, OperationType
+
 
 class RollerEnv(gym.Env):
     """Custom Environment that follows gym interface."""
@@ -22,9 +24,9 @@ class RollerEnv(gym.Env):
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
             "dice_faces": spaces.Box(
-                low=N_MIN_FACE_VALUE,
+                low=0,
                 high=N_MAX_FACE_VALUE,
-                shape=(N_DICES, N_DICE_FACES),
+                shape=(N_DICES, N_DICE_FACES, 2),
                 dtype=np.int8
             ),
             "dice_types": spaces.Box(
@@ -34,9 +36,9 @@ class RollerEnv(gym.Env):
                 dtype=np.int8
             ),
             "roll_results": spaces.Box(
-                low=N_MIN_FACE_VALUE,
+                low=0,
                 high=N_MAX_FACE_VALUE,
-                shape=(N_DICES,),
+                shape=(N_DICES,2),
                 dtype=np.int8
             ),
             "roll_results_totals": spaces.Box(
@@ -68,7 +70,13 @@ class RollerEnv(gym.Env):
                 high=MAX_ENEMY_HP,
                 shape=(2,),
                 dtype=np.int16
-            )
+            ),
+            "traits": spaces.Box(
+                low=0,
+                high=100,
+                shape=(N_TRAITS, N_DICES, 4),
+                dtype=np.int8
+            ),
         })
 
         self.game = Game()
@@ -139,6 +147,7 @@ class RollerEnv(gym.Env):
         unit_headers = ["Name", "HP", "Max HP", "Attack", "Defense"]
         info_headers = ["Reward", "Damage Taken", "Damage Dealt", "Remaining Rolls"]
         dices_headers = ["Dice", "Type", "Face 1", "Face 2", "Face 3", "Face 4", "Face 5", "Face 6"]
+        trait_headers = ["Trait", "Level", "Attack +", "Attack *", "Defense +", "Defense *"]
 
         print("=========================================")
 
@@ -164,9 +173,12 @@ class RollerEnv(gym.Env):
             print(tabulate(action, roll_headers, tablefmt="simple_outline"))
 
         if self.obs is not None:
-            roll_results = [self.obs["roll_results"]]
+            roll_results = []
+            for i in self.obs["roll_results"]:
+                roll_results.append(f"{i[0]} (trait {i[1]})")
+
             print("Roll results")
-            print(tabulate(roll_results, roll_headers, tablefmt="simple_outline"))
+            print(tabulate([roll_results], roll_headers, tablefmt="simple_outline"))
 
             units = [
                 [
@@ -186,16 +198,58 @@ class RollerEnv(gym.Env):
             ]
             print(tabulate(units, unit_headers, tablefmt="simple_outline"))
 
-            dice_faces = [
-                [
-                    f"Dice {i + 1}",
+            dice_faces = []
+
+            for i in range(N_DICES):
+                dice = [
+                    i + 1,
                     "Attack" if self.obs["dice_types"][i] == 0 else "Defense",
-                    *self.obs["dice_faces"][i]
                 ]
-                for i in range(N_DICES)
-            ]
+
+                for j in range(N_DICE_FACES):
+                    dice.append(
+                        f'{self.obs["dice_faces"][i][j][0]} (trait {self.obs["dice_faces"][i][j][1]})'
+                    )
+
+                dice_faces.append(dice)
 
             print(tabulate(dice_faces, dices_headers, tablefmt="simple_outline"))
+
+            traits = []
+
+            for i, trait in enumerate(self.obs["traits"]):
+                for j, effect in enumerate(trait):
+                    if effect.sum() == 0:
+                        continue
+
+                    attack_mult = "-"
+                    attack_add = "-"
+                    defense_mult = "-"
+                    defense_add = "-"
+
+                    if effect[1] == EffectType.DEFENSE.value:
+                        if effect[3] == OperationType.ADD.value:
+                            defense_add = effect[2]
+                        elif effect[3] == OperationType.MULTIPLY.value:
+                            defense_mult = effect[2]
+                    elif effect[1] == EffectType.ATTACK.value:
+                        if effect[3] == OperationType.MULTIPLY.value:
+                            attack_mult = effect[2]
+                        elif effect[3] == OperationType.ADD.value:
+                            attack_add = effect[2]
+
+                    row = [
+                        i + 1,
+                        effect[0],
+                        attack_add,
+                        attack_mult,
+                        defense_add,
+                        defense_mult,
+                    ]
+
+                    traits.append(row)
+
+            print(tabulate(traits, trait_headers, tablefmt="simple_outline"))
 
     def close(self):
         pass

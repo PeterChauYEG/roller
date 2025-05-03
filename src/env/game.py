@@ -22,6 +22,167 @@ MIN_ENEMY_ATTACK = 10
 MAX_ENEMY_DEFENSE = 50
 MIN_ENEMY_DEFENSE = 10
 
+N_TRAITS = 4
+
+class Trait:
+    name = ""
+    effect = {}
+
+    def __init__(self, name, effect):
+        self.name = name
+        self.effect = effect
+
+    def get_current_effect(self, level):
+        return self.effect[level]
+
+    def serialize(self):
+        return dict(
+            name=self.name,
+            effect=self.effect
+        )
+
+    def serialize_obs(self):
+        serialized_effect = []
+        for level, effects in self.effect.items():
+            if effects is None:
+                continue
+
+            for effect in effects:
+                effect = [
+                    level,
+                    effect["type"].value,
+                    effect["value"],
+                    effect["operation"].value
+                ]
+                serialized_effect.append(effect)
+
+        if len(serialized_effect) < N_DICES:
+            for i in range(N_DICES - len(serialized_effect)):
+                serialized_effect.append([0, 0, 0, 0])
+
+        return serialized_effect
+
+class EffectType(Enum):
+    ATTACK = 0
+    DEFENSE = 1
+
+class OperationType(Enum):
+    ADD = 0
+    MULTIPLY = 1
+    DIVIDE = 2
+    SUBTRACT = 3
+
+TRAITS = {
+    0: Trait(
+        "Attack Boost",
+        {
+            1: None,
+            2: None,
+            3: [{
+                "type": EffectType.ATTACK,
+                "value": 2,
+                "operation": OperationType.MULTIPLY
+            }],
+            4: None,
+            5: [{
+                "type": EffectType.ATTACK,
+                "value": 3,
+                "operation": OperationType.MULTIPLY
+            }],
+            6: [{
+                "type": EffectType.ATTACK,
+                "value": 5,
+                "operation": OperationType.MULTIPLY
+            }],
+        }
+    ),
+    1: Trait(
+        "Defense Boost",
+        {
+            1: None,
+            2: None,
+            3: [{
+                "type": EffectType.DEFENSE,
+                "value": 2,
+                "operation": OperationType.MULTIPLY
+            }],
+            4: None,
+            5: [{
+                "type": EffectType.DEFENSE,
+                "value": 3,
+                "operation": OperationType.MULTIPLY
+            }],
+            6: [{
+                "type": EffectType.DEFENSE,
+                "value": 5,
+                "operation": OperationType.MULTIPLY
+            }],
+        }
+    ),
+    2: Trait(
+        "Attack",
+        {
+            1: None,
+            2: [{
+                "type": EffectType.ATTACK,
+                "value": 5,
+                "operation": OperationType.ADD
+            }],
+            3: [{
+                "type": EffectType.ATTACK,
+                "value": 10,
+                "operation": OperationType.ADD
+            }],
+            4: [{
+                "type": EffectType.ATTACK,
+                "value": 15,
+                "operation": OperationType.ADD
+            }],
+            5: [{
+                "type": EffectType.ATTACK,
+                "value": 20,
+                "operation": OperationType.ADD
+            }],
+            6: [{
+                "type": EffectType.ATTACK,
+                "value": 40,
+                "operation": OperationType.ADD
+            }],
+        }
+    ),
+    3: Trait(
+        "Defense",
+        {
+            1: None,
+            2: [{
+                "type": EffectType.DEFENSE,
+                "value": 5,
+                "operation": OperationType.ADD
+            }],
+            3: [{
+                "type": EffectType.DEFENSE,
+                "value": 10,
+                "operation": OperationType.ADD
+            }],
+            4: [{
+                "type": EffectType.DEFENSE,
+                "value": 15,
+                "operation": OperationType.ADD
+            }],
+            5: [{
+                "type": EffectType.DEFENSE,
+                "value": 20,
+                "operation": OperationType.ADD
+            }],
+            6: [{
+                "type": EffectType.DEFENSE,
+                "value": 40,
+                "operation": OperationType.ADD
+            }],
+        }
+    ),
+}
+
 class DiceType(Enum):
     ATTACK = 0
     DEFENSE = 1
@@ -38,6 +199,7 @@ class Game():
     n_faces = N_DICE_FACES
     n_max_face_value = N_MAX_FACE_VALUE
     n_min_face_value = N_MIN_FACE_VALUE
+    traits = TRAITS
 
     enemy = dict(
         hp=MIN_ENEMY_HP,
@@ -67,7 +229,7 @@ class Game():
         self.player = self.generate_player()
 
         return self.new_turn()
-    
+
     def new_turn(self):
         self.n_remaining_rolls = self.n_max_rolls
         self.roll_results = []
@@ -83,8 +245,8 @@ class Game():
 
     def roll_all_dices(self):
         for dice_i in range(self.n_dices):
-            value = self.roll_dice(dice_i)
-            self.roll_results.append(value)
+            face = self.roll_dice(dice_i)
+            self.roll_results.append(face)
 
     def player_turn(self, roll_dices_i):
         should_roll = np.sum(roll_dices_i) > 0
@@ -94,8 +256,8 @@ class Game():
                 if roll_dices_i[i] == 0:
                     continue
 
-                value = self.roll_dice(i)
-                self.roll_results[i] = value
+                face = self.roll_dice(i)
+                self.roll_results[i] = face
 
             self.consume_roll()
 
@@ -118,7 +280,7 @@ class Game():
         return face
 
     def consume_roll(self):
-        self.n_remaining_rolls -= 1 
+        self.n_remaining_rolls -= 1
 
     def reset_rolls(self):
         self.n_remaining_rolls = self.n_max_rolls
@@ -171,14 +333,37 @@ class Game():
         return faces
 
     def generate_dice_face(self):
-        face = np.random.randint(self.n_min_face_value, self.n_max_face_value + 1)
-        return face
-    
+        value = np.random.randint(self.n_min_face_value, self.n_max_face_value + 1)
+        trait = np.random.randint(0, N_TRAITS)
+        return dict(
+            value=value,
+            trait=trait
+        )
+
     # getters ===============================================
     def get_roll_results_totals_obs(self):
         attack_total, defense_total = self.get_roll_results_totals()
 
+        # attack_total, defense_total = self.apply_traits(attack_total, defense_total)
+
         return np.array([float(attack_total), float(defense_total)], dtype=np.float16)
+
+    def apply_traits(self, attack_total, defense_total):
+        # face_traits = self.get_face_traits()
+        #
+        # # get the trait effects that apply
+        # effects = self.get_trait_effects()
+        #
+        # # apply add/substract traits first
+        # attack_total, defense_total = self.apply_add_traits(attack_total, defense_total)
+        # attack_total, defense_total = self.apply_subtract_traits(attack_total, defense_total)
+        #
+        # # then apply multiply/divide traits
+        # attack_total, defense_total = self.apply_multiply_traits(attack_total, defense_total)
+        # attack_total, defense_total = self.apply_divide_traits(attack_total, defense_total)
+        #
+        # return the results
+        return attack_total, defense_total
 
     def get_roll_results_totals(self):
         attack_total = 0
@@ -188,12 +373,12 @@ class Game():
             dice_type = self.dices[i]["dice_type"]
 
             if dice_type == DiceType.ATTACK:
-                attack_total += face
+                attack_total += face["value"]
             elif dice_type == DiceType.DEFENSE:
-                defense_total += face
+                defense_total += face["value"]
 
         return attack_total, defense_total
-    
+
     def get_dices(self):
         dices = []
         dice_types = []
@@ -205,7 +390,7 @@ class Game():
             dice_faces = []
 
             for face in dice["faces"]:
-                dice_faces.append(face)
+                dice_faces.append([face["value"], face["trait"]])
 
             dices.append(dice_faces)
             dice_types.append(dice_type)
@@ -215,11 +400,29 @@ class Game():
     def get_damage_done_obs(self):
         return np.array(self.damage_done, dtype=np.int16)
 
+    def get_traits_obs(self):
+        traits = []
+        for i in range(N_TRAITS):
+            trait = TRAITS[i]
+            traits.append(trait.serialize_obs())
+
+        return np.array(traits, dtype=np.int8)
+
+    def get_roll_results_obs(self):
+        roll_results = []
+
+        for i, face in enumerate(self.roll_results):
+            roll_results.append([face["value"], face["trait"]])
+
+        return np.array(roll_results, dtype=np.int8)
+
     def get_observation(self, prev_damage_done = [0, 0]):
         roll_results_totals = self.get_roll_results_totals_obs()
+        roll_results = self.get_roll_results_obs()
         dice_faces, dice_types = self.get_dices()
         enemy = self.get_enemy_obs()
         player = self.get_player_obs()
+        traits = self.get_traits_obs()
 
         damage_done = self.get_damage_done_obs()
         if prev_damage_done[0] != 0 or prev_damage_done[1] != 0:
@@ -228,12 +431,13 @@ class Game():
         return dict(
             dice_faces=dice_faces,
             dice_types=dice_types,
-            roll_results=np.array(self.roll_results, dtype=np.int8),
+            roll_results=roll_results,
             roll_results_totals=roll_results_totals,
             n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
             enemy=enemy,
             player=player,
-            damage_done=damage_done
+            damage_done=damage_done,
+            traits=traits,
         )
 
     # enemy ===============================================
