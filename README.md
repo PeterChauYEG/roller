@@ -36,6 +36,6 @@ python -m src.agent.trainer --timesteps 10000 \
 ```
 python -m src.agent.inference --timesteps 1000 \
 --render
+--model_path lower_player_damage_model.zip
 --model_path model.zip
---model_path --model_path model.zip
 ```
