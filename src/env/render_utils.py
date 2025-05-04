@@ -109,7 +109,7 @@ def calculate_traits(traits):
 
             row = [
                 trait_label,
-                i,
+                effect[0],
                 attack_add,
                 attack_mult,
                 defense_add,

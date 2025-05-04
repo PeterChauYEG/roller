@@ -5,7 +5,7 @@ from gymnasium import spaces
 from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
 from src.env.game import Game, WinnerType
 from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, MAX_ENEMY_HP, \
-    N_ACTIONS, N_DICE_TYPES
+    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD
 
 from src.env.render_utils import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
@@ -114,15 +114,16 @@ class RollerEnv(gym.Env):
 
         if won != WinnerType.NONE:
             if won == WinnerType.PLAYER:
-                reward = 1000.
+                reward = WIN_REWARD
             elif won == WinnerType.ENEMY:
-                reward = -1000.
+                reward = -LOSE_REWARD
 
             return reward, True, won == WinnerType.PLAYER,
 
         # calc the value of the roll
-        diff = (obs["roll_results_totals"] - self.last_roll_results_totals).sum()
-        reward = diff
+        if self.last_roll_results_totals[0] > 0 or self.last_roll_results_totals[1] > 0:
+            diff = (obs["roll_results_totals"] - self.last_roll_results_totals).sum()
+            reward = diff
 
         # calc the difference of damage dealt - damage taken as a number [0 - 100]
         if has_damage_been_done(obs["damage_done"]):
@@ -131,7 +132,7 @@ class RollerEnv(gym.Env):
                 obs["player"][0],
                 obs["enemy"][0]
             )
-            diff = diff * 10
+            diff = diff * DAMAGE_REWARD_MULTIPLIER
             reward += diff
 
         reward = float(round(reward, 2))
