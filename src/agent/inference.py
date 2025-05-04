@@ -1,5 +1,3 @@
-import src.env
-
 import pathlib
 import argparse
 
@@ -7,8 +5,8 @@ import gymnasium as gym
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO
 
-from src.agent.summary_utils import log_summary
-from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
+from src.agent.utils.summary import log_summary
+from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
 
 n_rerolls = 3
 timesteps=100000

@@ -1,10 +1,10 @@
 import numpy as np
 
-from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, MIN_ENEMY_HP, \
+from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, MIN_ENEMY_HP, \
     MIN_ENEMY_ATTACK, MIN_ENEMY_DEFENSE, N_TRAITS, MAX_PLAYER_HP, MIN_PLAYER_HP, MAX_ENEMY_HP, MAX_ENEMY_ATTACK, \
     MAX_ENEMY_DEFENSE, MIN_PLAYER_ATTACK, MAX_PLAYER_ATTACK, MIN_PLAYER_DEFENSE, MAX_PLAYER_DEFENSE
 from src.env.game_enums import WinnerType, DiceType, EffectType, OperationType
-from src.env.traits_data import TRAITS
+from src.env.data.traits import TRAITS
 from src.env.unit import Unit
 
 

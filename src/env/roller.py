@@ -2,13 +2,12 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
+from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
 from src.env.game import Game, WinnerType
-from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
-    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MAX_ENEMY_ATTACK, \
-    MAX_ENEMY_DEFENSE, MAX_PLAYER_DEFENSE
+from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
+    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK
 
-from src.env.render_utils import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
+from src.env.utils.render import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
     render_table
 

@@ -1,9 +1,6 @@
-from src.env.env_constants import N_DICES
+from src.env.data.game import N_DICES
 
 class Trait:
-    name = ""
-    effect = {}
-
     def __init__(self, name, effect):
         self.name = name
         self.effect = effect

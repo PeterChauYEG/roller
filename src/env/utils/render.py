@@ -1,7 +1,7 @@
 from tabulate import tabulate
 
 from src.env.game import EffectType, OperationType
-from src.env.env_constants import N_DICES, N_DICE_FACES, N_TRAITS
+from src.env.data.game import N_DICES, N_DICE_FACES, N_TRAITS
 
 ROLL_HEADERS = ["Dice 1", "Dice 2", "Dice 3", "Dice 4", "Dice 5", "Dice 6"]
 UNIT_HEADERS = ["Name", "HP", "Max HP", "Attack", "Defense"]
