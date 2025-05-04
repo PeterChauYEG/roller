@@ -144,7 +144,6 @@ class RollerEnv(gym.Env):
 
         return reward, False, False
 
-
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.action = None
