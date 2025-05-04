@@ -5,7 +5,8 @@ from gymnasium import spaces
 from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
 from src.env.game import Game, WinnerType
 from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
-    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK
+    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MIN_ENEMY_ATTACK, \
+    MIN_ENEMY_DEFENSE, MAX_ENEMY_DEFENSE, MAX_ENEMY_ATTACK, MAX_ENEMY_HP, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP
 
 from src.env.utils.render import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
@@ -30,7 +31,7 @@ class RollerEnv(gym.Env):
         self.observation_space = spaces.Dict({
             "all_dice_face_traits": spaces.Box(
                 low=0,
-                high=N_MAX_FACE_VALUE,
+                high=N_TRAITS,
                 shape=(N_DICES, N_DICE_FACES,),
                 dtype=np.int16
             ),
@@ -54,7 +55,7 @@ class RollerEnv(gym.Env):
             ),
             "enemy": spaces.Box(
                 low=0,
-                high=MAX_PLAYER_ATTACK,
+                high=max(MAX_ENEMY_ATTACK, MAX_ENEMY_DEFENSE, MAX_ENEMY_HP),
                 shape=(4,),
                 dtype=np.int16
             ),
@@ -66,13 +67,13 @@ class RollerEnv(gym.Env):
             ),
             "player": spaces.Box(
                 low=0,
-                high=MAX_PLAYER_ATTACK,
+                high=max(MAX_PLAYER_ATTACK, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP),
                 shape=(4,),
                 dtype=np.int16
             ),
             "roll_result_traits": spaces.Box(
                 low=0,
-                high=N_MAX_FACE_VALUE,
+                high=N_TRAITS,
                 shape=(N_DICES,),
                 dtype=np.int16
             ),
