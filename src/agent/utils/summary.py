@@ -15,6 +15,12 @@ def log_win_losses(w, l):
         print("No games completed")
 
 def log_stats(label, data):
+    print("\n======== Summary of {0} ========".format(label))
+
+    if len(data) == 0:
+        print(f"No {label}")
+        return 0, 0, 0, 0
+
     data = np.array(data)
 
     best = data.max()
@@ -26,7 +32,6 @@ def log_stats(label, data):
     std = np.std(data)
     std = round(std, 2)
 
-    print("\n======== Summary of {0} ========".format(label))
     print("Best: ", best)
     print("Worst: ", worst)
     print("Mean: ", mean)
@@ -36,6 +41,9 @@ def log_stats(label, data):
     return mean, median, best, worst
 
 def plot_histogram(title, xlabel, ylabel, mean, median, best, worst, data):
+    if len(data) == 0:
+        return
+
     sns.set_style("darkgrid")
     plt.figure(figsize=(10, 6))
     plt.title(title)

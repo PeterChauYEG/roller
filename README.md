@@ -28,17 +28,15 @@ python -m src.agent.trainer --timesteps 100000 \
 --save_checkpoint_frequency 5000 \
 --linear_lr_schedule \
 --experiment_name lower_player_damage \
---save_model_path lower_player_damage_model.zip
 --save_model_path model.zip
 ```
 
 ## inference
 ```
-python -m src.agent.inference --timesteps 1000 \
+python -m src.agent.inference --timesteps 10 \
 --render \
---model_path lower_player_damage_model.zip
 --model_path model.zip
 
 python -m src.agent.inference --timesteps 1000 \
---model_path lower_player_damage_model.zip
+--model_path model.zip
 ```

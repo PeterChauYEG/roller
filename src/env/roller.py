@@ -28,28 +28,28 @@ class RollerEnv(gym.Env):
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
-            "dice_faces": spaces.Box(
+            "all_dice_face_traits": spaces.Box(
                 low=0,
                 high=N_MAX_FACE_VALUE,
-                shape=(N_DICES, N_DICE_FACES, 2),
+                shape=(N_DICES, N_DICE_FACES,),
                 dtype=np.int16
             ),
-            "dice_types": spaces.Box(
+            "all_dice_face_values": spaces.Box(
+                low=0,
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES, N_DICE_FACES,),
+                dtype=np.int16
+            ),
+            "all_dice_types": spaces.Box(
                 low=0,
                 high=N_DICE_TYPES,
                 shape=(N_DICES,),
                 dtype=np.int16
             ),
-            "roll_results": spaces.Box(
+            "damage_done": spaces.Box(
                 low=0,
-                high=N_MAX_FACE_VALUE,
-                shape=(N_DICES,2),
-                dtype=np.int16
-            ),
-            "n_remaining_rolls": spaces.Box(
-                low=0,
-                high=N_MAX_ROLLS,
-                shape=(1,),
+                high=MAX_PLAYER_ATTACK,
+                shape=(2,),
                 dtype=np.int16
             ),
             "enemy": spaces.Box(
@@ -58,16 +58,28 @@ class RollerEnv(gym.Env):
                 shape=(4,),
                 dtype=np.int16
             ),
+            "n_remaining_rolls": spaces.Box(
+                low=0,
+                high=N_MAX_ROLLS,
+                shape=(1,),
+                dtype=np.int16
+            ),
             "player": spaces.Box(
                 low=0,
                 high=MAX_PLAYER_ATTACK,
                 shape=(4,),
                 dtype=np.int16
             ),
-            "damage_done": spaces.Box(
+            "roll_result_traits": spaces.Box(
                 low=0,
-                high=MAX_PLAYER_ATTACK,
-                shape=(2,),
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES,),
+                dtype=np.int16
+            ),
+            "roll_result_values": spaces.Box(
+                low=0,
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES,),
                 dtype=np.int16
             ),
             "traits": spaces.Box(
@@ -181,9 +193,16 @@ class RollerEnv(gym.Env):
             render_table(ROLL_HEADERS, action)
 
         if self.obs is not None:
-            roll_results = calculate_roll_results(self.obs["roll_results"])
+            roll_results = calculate_roll_results(
+                self.obs["roll_result_traits"],
+                self.obs["roll_result_values"]
+            )
 
-            dice_faces = calculate_dice_faces(self.obs["dice_faces"], self.obs["dice_types"])
+            dice_faces = calculate_dice_faces(
+                self.obs["all_dice_face_traits"],
+                self.obs["all_dice_face_values"],
+                self.obs["all_dice_types"]
+            )
             traits = calculate_traits(self.obs["traits"])
 
             print("\n> Roll results")

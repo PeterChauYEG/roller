@@ -292,37 +292,50 @@ class Game():
         attack_total, defense_total = self.apply_traits(attack_total, defense_total)
         return attack_total, defense_total
 
-    def get_dices_obs(self):
-        dices = []
-        dice_types = []
+    def get_all_dices_obs(self):
+        all_dice_face_values = []
+        all_dice_face_traits = []
+        all_dice_types = []
 
         for dice in self.dices:
             dice_type = dice.get_type().value
-            dice_faces = []
+            dice_face_values = []
+            dice_face_traits = []
 
             for face in dice.get_faces():
                 face_value = face.get_value()
                 face_trait = face.get_trait()
-                dice_faces.append([face_value, face_trait])
+                dice_face_values.append(face_value)
+                dice_face_traits.append(face_trait)
 
-            dices.append(dice_faces)
-            dice_types.append(dice_type)
+            all_dice_face_values.append(dice_face_values)
+            all_dice_face_traits.append(dice_face_traits)
+            all_dice_types.append(dice_type)
 
-        return np.array(dices, dtype=np.int8), np.array(dice_types, dtype=np.int8)
+        return (
+            np.array(all_dice_face_values, dtype=np.int8),
+            np.array(all_dice_face_traits, dtype=np.int8),
+            np.array(all_dice_types, dtype=np.int8),
+        )
 
     def get_damage_done_obs(self):
         return np.array(self.damage_done, dtype=np.int16)
 
-    def get_roll_results_obs(self):
-        roll_results = []
+    def get_roll_result_obs(self):
+        roll_result_values = []
+        roll_result_traits = []
 
         for i, face in enumerate(self.roll_results):
             face_value = face.get_value()
             face_trait = face.get_trait()
 
-            roll_results.append([face_value, face_trait])
+            roll_result_values.append(face_value)
+            roll_result_traits.append(face_trait)
 
-        return np.array(roll_results, dtype=np.int8)
+        return (
+            np.array(roll_result_values, dtype=np.int8),
+            np.array(roll_result_traits, dtype=np.int8)
+        )
 
     def get_observation(self, prev_damage_done = [0, 0]):
         roll_results_totals = self.get_roll_results_totals_obs()
@@ -333,8 +346,8 @@ class Game():
         enemy = self.enemy.get_obs()
         player = self.player.get_obs()
 
-        roll_results = self.get_roll_results_obs()
-        dice_faces, dice_types = self.get_dices_obs()
+        roll_result_values, roll_result_traits = self.get_roll_result_obs()
+        all_dice_face_values, all_dice_face_traits, all_dice_types = self.get_all_dices_obs()
         traits = get_traits_obs()
 
         damage_done = self.get_damage_done_obs()
@@ -342,12 +355,14 @@ class Game():
             damage_done = np.array(prev_damage_done, dtype=np.int16)
 
         return dict(
-            dice_faces=dice_faces,
-            dice_types=dice_types,
-            roll_results=roll_results,
-            n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
-            enemy=enemy,
-            player=player,
+            all_dice_face_traits=all_dice_face_traits,
+            all_dice_face_values=all_dice_face_values,
+            all_dice_types=all_dice_types,
             damage_done=damage_done,
+            enemy=enemy,
+            n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
+            player=player,
+            roll_result_traits=roll_result_traits,
+            roll_result_values=roll_result_values,
             traits=traits,
         )

@@ -30,10 +30,12 @@ def calculate_info(damage_done, reward, n_remaining_rolls):
 def calculate_action(action):
     return [action]
 
-def calculate_roll_results(roll_results):
+def calculate_roll_results(roll_result_traits, roll_result_values):
     res = []
-    for i in roll_results:
-        res.append(f"{i[0]} (trait {i[1]})")
+    for i in roll_result_traits:
+        trait = roll_result_traits[i]
+        value = roll_result_values[i]
+        res.append(f"{value} (trait {trait})")
 
     return [res]
 
@@ -56,7 +58,7 @@ def calculate_units(player, enemy):
 
     return [player, enemy]
 
-def calculate_dice_faces(dice_faces, dice_types):
+def calculate_dice_faces(all_dice_face_traits, all_dice_face_values, dice_types):
     res = []
 
     for i in range(N_DICES):
@@ -69,8 +71,8 @@ def calculate_dice_faces(dice_faces, dice_types):
         ]
 
         for j in range(N_DICE_FACES):
-            value = dice_faces[i][j][0]
-            trait = dice_faces[i][j][1]
+            value = all_dice_face_values[i][j]
+            trait = all_dice_face_traits[i][j]
             label = f"{value} (trait {trait})"
 
             dice.append(label)
