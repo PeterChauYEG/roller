@@ -62,6 +62,7 @@ damage_dealt = []
 damage_taken = []
 wins = 0
 losses = 0
+rolls = 0
 
 for i in range(args.timesteps):
     if i % n_log_interval == 0:
@@ -71,6 +72,8 @@ for i in range(args.timesteps):
     obs, reward, terminated, truncated, info = env.step(action)
 
     if terminated:
+        rolls = info["rolls"]
+
         if info["player_won"]:
             wins += 1
         elif not info["player_won"]:
@@ -97,4 +100,4 @@ for i in range(args.timesteps):
 env.close()
 
 print("\n======== Inference finished ========")
-log_summary(wins, losses, diffs, damage_dealt, damage_taken)
+log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls)

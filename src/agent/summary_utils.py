@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
+def log_rolls(rolls):
+    print("Rolls: ", rolls)
+
 def log_win_losses(w, l):
     print("\n======== Summary of wins - losses ========")
     print("Wins: ", w)
@@ -46,8 +49,9 @@ def plot_histogram(title, xlabel, ylabel, mean, median, best, worst, data):
     plt.legend({"Mean": mean, "Median": median, "Best": best, "Worst": worst})
     plt.show()
 
-def log_summary(w, l, diffs, damage_dealt, damage_taken):
+def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls):
     log_win_losses(w, l)
+    log_rolls(rolls)
 
     diff_mean, diff_median, diff_best, diff_worst = log_stats("Difference of damage dealt vs taken (%)", diffs)
     damage_dealt_mean, damage_dealt_median, damage_dealt_best, damage_dealt_worst = log_stats("Damage dealt", damage_dealt)

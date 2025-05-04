@@ -18,12 +18,13 @@ class RollerEnv(gym.Env):
 
     def __init__(self, render_mode=None):
         super().__init__()
-
         # for render
         self.action = None
         self.obs = None
         self.reward = None
         self.last_roll_results_totals = [0., 0.]
+        self.hand = 0
+        self.rolls = 0
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
@@ -93,11 +94,18 @@ class RollerEnv(gym.Env):
             "player_won": False,
         }
 
-        obs, won = self.game.player_turn(action)
+        obs, won, did_roll = self.game.player_turn(action)
         self.obs = obs
+
+        if not did_roll:
+            self.hand += 1
+        else:
+            self.rolls += 1
 
         reward, game_over, won = self.calculate_reward(obs, won)
         self.reward = reward
+
+        info["rolls"] = self.rolls
 
         if game_over:
             self.last_roll_results_totals = [0., 0.]
@@ -141,20 +149,21 @@ class RollerEnv(gym.Env):
 
 
     def reset(self, seed=None, options=None):
-        self.action = None
-
         super().reset(seed=seed)
+        self.action = None
+        self.hand = 0
+        self.rolls = 0
+        self.reward = 0
         info = {}
 
-        obs, won = self.game.reset()
+        obs, won, did_roll = self.game.reset()
         self.obs = obs
-        self.reward = 0
         self.last_roll_results_totals = obs["roll_results_totals"]
 
         return obs, info
 
     def render(self):
-        print("=========================================")
+        print("================== hand {} ======================".format(self.hand))
 
         if self.obs is not None:
             info = calculate_info(
@@ -162,26 +171,30 @@ class RollerEnv(gym.Env):
                 self.reward,
                 self.obs["n_remaining_rolls"]
             )
-            render_table(INFO_HEADERS, info)
-
-        if self.action is not None:
-            action = calculate_action(self.action)
-            print("Rerolling dices")
-            render_table(ROLL_HEADERS, action)
-
-        if self.obs is not None:
-            roll_results = calculate_roll_results(self.obs["roll_results"])
             units = calculate_units(
                 self.obs["player"],
                 self.obs["enemy"],
                 self.obs["roll_results_totals"]
             )
+            print("\n> Info")
+            render_table(INFO_HEADERS, info)
+            render_table(UNIT_HEADERS, units)
+
+        if self.action is not None:
+            action = calculate_action(self.action)
+            print("\n> Rerolling dices")
+            render_table(ROLL_HEADERS, action)
+
+        if self.obs is not None:
+            roll_results = calculate_roll_results(self.obs["roll_results"])
+
             dice_faces = calculate_dice_faces(self.obs["dice_faces"], self.obs["dice_types"])
             traits = calculate_traits(self.obs["traits"])
 
-            print("Roll results")
+            print("\n> Roll results")
             render_table(ROLL_HEADERS, roll_results)
-            render_table(UNIT_HEADERS, units)
+
+            print("\n> Lookup tables")
             render_table(DICES_HEADERS, dice_faces)
             render_table(TRAITS_HEADERS, traits)
 
