@@ -1,12 +1,15 @@
-from tabulate import tabulate
-
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from src.env.game import Game, N_ACTIONS, N_DICES, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, N_DICE_TYPES, \
-    N_MAX_ROLLS, MIN_ROLL, MAX_ROLL, MAX_ENEMY_HP, WinnerType, N_TRAITS, EffectType, OperationType
+from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
+from src.env.game import Game, WinnerType
+from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, MAX_ENEMY_HP, \
+    N_ACTIONS, N_DICE_TYPES
 
+from src.env.render_utils import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
+    ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
+    render_table
 
 class RollerEnv(gym.Env):
     """Custom Environment that follows gym interface."""
@@ -15,11 +18,12 @@ class RollerEnv(gym.Env):
 
     def __init__(self, render_mode=None):
         super().__init__()
-        # render
+
+        # for render
         self.action = None
         self.obs = None
-        self.won = None
         self.reward = None
+        self.last_roll_results_totals = [0., 0.]
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
@@ -43,7 +47,7 @@ class RollerEnv(gym.Env):
             ),
             "roll_results_totals": spaces.Box(
                 low=0,
-                high=1000,
+                high=10000,
                 shape=(2,),
                 dtype=np.float16
             ),
@@ -80,53 +84,60 @@ class RollerEnv(gym.Env):
         })
 
         self.game = Game()
-        self.last_roll_results_totals = [0., 0.]
 
     def step(self, action):
         self.action = action
+        truncated = False
 
         info = {
             "player_won": False,
         }
 
-        truncated = False
-
         obs, won = self.game.player_turn(action)
         self.obs = obs
-        self.won = won
 
+        reward, game_over, won = self.calculate_reward(obs, won)
+        self.reward = reward
+
+        if game_over:
+            self.last_roll_results_totals = [0., 0.]
+            info["player_won"] = won
+
+            return obs, reward, True, truncated, info
+
+        self.last_roll_results_totals = obs["roll_results_totals"]
+
+        return obs, reward, False, truncated, info
+
+    def calculate_reward(self, obs, won):
         reward = 0
 
         if won != WinnerType.NONE:
             if won == WinnerType.PLAYER:
-                info["player_won"] = True
-                reward += 1000
+                reward = 1000.
             elif won == WinnerType.ENEMY:
-                info["player_won"] = False
-                reward -= 1000
+                reward = -1000.
 
-            print("Game over. Player won: ", won == WinnerType.PLAYER)
-            self.last_roll_results_totals = [0., 0.]
-
-            self.reward = reward
-            return obs, reward, True, truncated, info
+            return reward, True, won == WinnerType.PLAYER,
 
         # calc the value of the roll
         diff = (obs["roll_results_totals"] - self.last_roll_results_totals).sum()
-        reward = float(diff)
-
-        self.last_roll_results_totals = obs["roll_results_totals"]
+        reward = diff
 
         # calc the difference of damage dealt - damage taken as a number [0 - 100]
-        if obs["damage_done"][0] > 0 or obs["damage_done"][1] > 0:
-            damage_to_player = obs["damage_done"][0] / obs["player"][0] * 100
-            damage_to_enemy = obs["damage_done"][1] / obs["enemy"][0] * 100
-            diff = (damage_to_enemy - damage_to_player) * 10
+        if has_damage_been_done(obs["damage_done"]):
+            diff = get_damage_diff_percent(
+                obs["damage_done"],
+                obs["player"][0],
+                obs["enemy"][0]
+            )
+            diff = diff * 10
             reward += diff
 
-        reward = round(float(reward), 2)
-        self.reward = reward
-        return obs, reward, False, truncated, info
+        reward = float(round(reward, 2))
+
+        return reward, False, False
+
 
     def reset(self, seed=None, options=None):
         self.action = None
@@ -136,120 +147,42 @@ class RollerEnv(gym.Env):
 
         obs, won = self.game.reset()
         self.obs = obs
-        self.won = won
         self.reward = 0
         self.last_roll_results_totals = obs["roll_results_totals"]
 
         return obs, info
 
     def render(self):
-        roll_headers = ["Dice 1", "Dice 2", "Dice 3", "Dice 4", "Dice 5", "Dice 6"]
-        unit_headers = ["Name", "HP", "Max HP", "Attack", "Defense"]
-        info_headers = ["Reward", "Damage Taken", "Damage Dealt", "Remaining Rolls"]
-        dices_headers = ["Dice", "Type", "Face 1", "Face 2", "Face 3", "Face 4", "Face 5", "Face 6"]
-        trait_headers = ["Trait", "Level", "Attack +", "Attack *", "Defense +", "Defense *"]
-
         print("=========================================")
 
         if self.obs is not None:
-            reward = self.reward if self.reward is not None else 0
-            damage_taken = self.obs["damage_done"][0]
-            damage_dealt = self.obs["damage_done"][1]
-
-            info = [
-                [
-                    reward,
-                    damage_taken,
-                    damage_dealt,
-                    self.obs["n_remaining_rolls"][0]
-                ]
-            ]
-
-            print(tabulate(info, info_headers, tablefmt="simple_outline"))
+            info = calculate_info(
+                self.obs["damage_done"],
+                self.reward,
+                self.obs["n_remaining_rolls"]
+            )
+            render_table(INFO_HEADERS, info)
 
         if self.action is not None:
-            action = [self.action]
+            action = calculate_action(self.action)
             print("Rerolling dices")
-            print(tabulate(action, roll_headers, tablefmt="simple_outline"))
+            render_table(ROLL_HEADERS, action)
 
         if self.obs is not None:
-            roll_results = []
-            for i in self.obs["roll_results"]:
-                roll_results.append(f"{i[0]} (trait {i[1]})")
+            roll_results = calculate_roll_results(self.obs["roll_results"])
+            units = calculate_units(
+                self.obs["player"],
+                self.obs["enemy"],
+                self.obs["roll_results_totals"]
+            )
+            dice_faces = calculate_dice_faces(self.obs["dice_faces"], self.obs["dice_types"])
+            traits = calculate_traits(self.obs["traits"])
 
             print("Roll results")
-            print(tabulate([roll_results], roll_headers, tablefmt="simple_outline"))
-
-            units = [
-                [
-                    "Player",
-                    self.obs["player"][1],
-                    self.obs["player"][0],
-                    self.obs["roll_results_totals"][0],
-                    self.obs["roll_results_totals"][1],
-                ],
-                [
-                    "Enemy",
-                    self.obs["enemy"][1],
-                    self.obs["enemy"][0],
-                    self.obs["enemy"][2],
-                    self.obs["enemy"][3],
-                ]
-            ]
-            print(tabulate(units, unit_headers, tablefmt="simple_outline"))
-
-            dice_faces = []
-
-            for i in range(N_DICES):
-                dice = [
-                    i + 1,
-                    "Attack" if self.obs["dice_types"][i] == 0 else "Defense",
-                ]
-
-                for j in range(N_DICE_FACES):
-                    dice.append(
-                        f'{self.obs["dice_faces"][i][j][0]} (trait {self.obs["dice_faces"][i][j][1]})'
-                    )
-
-                dice_faces.append(dice)
-
-            print(tabulate(dice_faces, dices_headers, tablefmt="simple_outline"))
-
-            traits = []
-
-            for i, trait in enumerate(self.obs["traits"]):
-                for j, effect in enumerate(trait):
-                    if effect.sum() == 0:
-                        continue
-
-                    attack_mult = "-"
-                    attack_add = "-"
-                    defense_mult = "-"
-                    defense_add = "-"
-
-                    if effect[1] == EffectType.DEFENSE.value:
-                        if effect[3] == OperationType.ADD.value:
-                            defense_add = effect[2]
-                        elif effect[3] == OperationType.MULTIPLY.value:
-                            defense_mult = effect[2]
-                    elif effect[1] == EffectType.ATTACK.value:
-                        if effect[3] == OperationType.MULTIPLY.value:
-                            attack_mult = effect[2]
-                        elif effect[3] == OperationType.ADD.value:
-                            attack_add = effect[2]
-
-                    row = [
-                        i,
-                        effect[0],
-                        attack_add,
-                        attack_mult,
-                        defense_add,
-                        defense_mult,
-                    ]
-
-                    traits.append(row)
-
-            print(tabulate(traits, trait_headers, tablefmt="simple_outline"))
+            render_table(ROLL_HEADERS, roll_results)
+            render_table(UNIT_HEADERS, units)
+            render_table(DICES_HEADERS, dice_faces)
+            render_table(TRAITS_HEADERS, traits)
 
     def close(self):
         pass

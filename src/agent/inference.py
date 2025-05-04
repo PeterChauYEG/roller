@@ -10,6 +10,8 @@ import gymnasium as gym
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO
 
+from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
+
 n_rerolls = 3
 timesteps=100000
 n_log_interval=10000
@@ -132,11 +134,13 @@ for i in range(args.timesteps):
             losses += 1
 
     diff = 0
-    if obs["damage_done"][0] > 0 or obs["damage_done"][1] > 0:
-        damage_to_player = (obs["damage_done"][0] / obs["player"][0]) * 100
-        damage_to_enemy = (obs["damage_done"][1] / obs["enemy"][0]) * 100
-        diff = round(damage_to_enemy - damage_to_player, 2)
-        diffs.append(diff)
+    if has_damage_been_done(obs["damage_done"]):
+        diff = get_damage_diff_percent(
+            obs["damage_done"],
+            obs["player"][0],
+            obs["enemy"][0]
+        )
+        diffs.append(round(diff, 2))
 
         damage_dealt.append(obs["damage_done"][0])
         damage_taken.append(obs["damage_done"][1])
