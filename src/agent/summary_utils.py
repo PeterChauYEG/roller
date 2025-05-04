@@ -49,14 +49,16 @@ def plot_histogram(title, xlabel, ylabel, mean, median, best, worst, data):
     plt.legend({"Mean": mean, "Median": median, "Best": best, "Worst": worst})
     plt.show()
 
-def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls):
+def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls, hands):
     log_win_losses(w, l)
     log_rolls(rolls)
 
     diff_mean, diff_median, diff_best, diff_worst = log_stats("Difference of damage dealt vs taken (%)", diffs)
     damage_dealt_mean, damage_dealt_median, damage_dealt_best, damage_dealt_worst = log_stats("Damage dealt", damage_dealt)
     damage_taken_mean, damage_taken_median, damage_taken_best, damage_taken_worst = log_stats("Damage taken", damage_taken)
+    hands_mean, hands_median, hands_best, hands_worst = log_stats("Hands / game", hands)
 
     plot_histogram("Difference of damage dealt vs taken (%)", "Difference (%)", "Frequency", diff_mean, diff_median, diff_best, diff_worst, diffs)
     plot_histogram("Damage dealt", "Damage dealt", "Frequency", damage_dealt_mean, damage_dealt_median, damage_dealt_best, damage_dealt_worst, damage_dealt)
     plot_histogram("Damage taken", "Damage taken", "Frequency", damage_taken_mean, damage_taken_median, damage_taken_best, damage_taken_worst, damage_taken)
+    plot_histogram("Hands / game", "Hands", "Frequency", hands_mean, hands_median, hands_best, hands_worst, hands)

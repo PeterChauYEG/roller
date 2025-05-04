@@ -37,13 +37,13 @@ def calculate_roll_results(roll_results):
 
     return [res]
 
-def calculate_units(player, enemy, roll_results_totals):
+def calculate_units(player, enemy):
     player = [
         "Player",
         player[1],
         player[0],
-        roll_results_totals[0],
-        roll_results_totals[1],
+        player[2],
+        player[3],
     ]
 
     enemy = [
@@ -91,10 +91,10 @@ def calculate_traits(traits):
             if effect.sum() == 0:
                 continue
 
-            attack_mult = "-"
-            attack_add = "-"
-            defense_mult = "-"
-            defense_add = "-"
+            attack_mult = "--"
+            attack_add = "--"
+            defense_mult = "--"
+            defense_add = "--"
 
             if effect[1] == EffectType.DEFENSE.value:
                 if effect[3] == OperationType.ADD.value:

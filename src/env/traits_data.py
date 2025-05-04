@@ -9,18 +9,18 @@ TRAITS = {
             2: None,
             3: [{
                 "type": EffectType.ATTACK,
-                "value": 2,
+                "value": 5,
                 "operation": OperationType.MULTIPLY
             }],
             4: None,
             5: [{
                 "type": EffectType.ATTACK,
-                "value": 3,
+                "value": 15,
                 "operation": OperationType.MULTIPLY
             }],
             6: [{
                 "type": EffectType.ATTACK,
-                "value": 5,
+                "value": 30,
                 "operation": OperationType.MULTIPLY
             }],
         }
@@ -32,18 +32,18 @@ TRAITS = {
             2: None,
             3: [{
                 "type": EffectType.DEFENSE,
-                "value": 2,
+                "value": 5,
                 "operation": OperationType.MULTIPLY
             }],
             4: None,
             5: [{
                 "type": EffectType.DEFENSE,
-                "value": 3,
+                "value": 15,
                 "operation": OperationType.MULTIPLY
             }],
             6: [{
                 "type": EffectType.DEFENSE,
-                "value": 5,
+                "value": 30,
                 "operation": OperationType.MULTIPLY
             }],
         }
@@ -54,22 +54,22 @@ TRAITS = {
             1: None,
             2: [{
                 "type": EffectType.ATTACK,
-                "value": 5,
+                "value": 10,
                 "operation": OperationType.ADD
             }],
             3: [{
                 "type": EffectType.ATTACK,
-                "value": 10,
+                "value": 15,
                 "operation": OperationType.ADD
             }],
             4: [{
                 "type": EffectType.ATTACK,
-                "value": 15,
+                "value": 20,
                 "operation": OperationType.ADD
             }],
             5: [{
                 "type": EffectType.ATTACK,
-                "value": 20,
+                "value": 30,
                 "operation": OperationType.ADD
             }],
             6: [{
@@ -85,22 +85,22 @@ TRAITS = {
             1: None,
             2: [{
                 "type": EffectType.DEFENSE,
-                "value": 5,
+                "value": 10,
                 "operation": OperationType.ADD
             }],
             3: [{
                 "type": EffectType.DEFENSE,
-                "value": 10,
+                "value": 15,
                 "operation": OperationType.ADD
             }],
             4: [{
                 "type": EffectType.DEFENSE,
-                "value": 15,
+                "value": 20,
                 "operation": OperationType.ADD
             }],
             5: [{
                 "type": EffectType.DEFENSE,
-                "value": 20,
+                "value": 30,
                 "operation": OperationType.ADD
             }],
             6: [{

@@ -4,8 +4,9 @@ from gymnasium import spaces
 
 from src.env.env_utils import has_damage_been_done, get_damage_diff_percent
 from src.env.game import Game, WinnerType
-from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, MAX_ENEMY_HP, \
-    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD
+from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
+    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MAX_ENEMY_ATTACK, \
+    MAX_ENEMY_DEFENSE, MAX_PLAYER_DEFENSE
 
 from src.env.render_utils import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
@@ -22,7 +23,7 @@ class RollerEnv(gym.Env):
         self.action = None
         self.obs = None
         self.reward = None
-        self.last_roll_results_totals = [0., 0.]
+        self.last_roll_results_totals = 0
         self.hand = 0
         self.rolls = 0
 
@@ -46,12 +47,6 @@ class RollerEnv(gym.Env):
                 shape=(N_DICES,2),
                 dtype=np.int16
             ),
-            "roll_results_totals": spaces.Box(
-                low=0,
-                high=10000,
-                shape=(2,),
-                dtype=np.float16
-            ),
             "n_remaining_rolls": spaces.Box(
                 low=0,
                 high=N_MAX_ROLLS,
@@ -60,19 +55,19 @@ class RollerEnv(gym.Env):
             ),
             "enemy": spaces.Box(
                 low=0,
-                high=MAX_ENEMY_HP,
+                high=MAX_PLAYER_ATTACK,
                 shape=(4,),
                 dtype=np.int16
             ),
             "player": spaces.Box(
                 low=0,
-                high=MAX_ENEMY_HP,
-                shape=(2,),
+                high=MAX_PLAYER_ATTACK,
+                shape=(4,),
                 dtype=np.int16
             ),
             "damage_done": spaces.Box(
                 low=0,
-                high=MAX_ENEMY_HP,
+                high=MAX_PLAYER_ATTACK,
                 shape=(2,),
                 dtype=np.int16
             ),
@@ -92,6 +87,7 @@ class RollerEnv(gym.Env):
 
         info = {
             "player_won": False,
+            "hands": 0
         }
 
         obs, won, did_roll = self.game.player_turn(action)
@@ -108,12 +104,13 @@ class RollerEnv(gym.Env):
         info["rolls"] = self.rolls
 
         if game_over:
-            self.last_roll_results_totals = [0., 0.]
+            self.last_roll_results_totals = 0
             info["player_won"] = won
+            info["hands"] = self.hand + 1
 
             return obs, reward, True, truncated, info
 
-        self.last_roll_results_totals = obs["roll_results_totals"]
+        self.last_roll_results_totals = obs["player"][2] + obs["player"][3]
 
         return obs, reward, False, truncated, info
 
@@ -129,8 +126,9 @@ class RollerEnv(gym.Env):
             return reward, True, won == WinnerType.PLAYER,
 
         # calc the value of the roll
-        if self.last_roll_results_totals[0] > 0 or self.last_roll_results_totals[1] > 0:
-            diff = (obs["roll_results_totals"] - self.last_roll_results_totals).sum()
+        if self.last_roll_results_totals > 0:
+            player_total = obs["player"][2] + obs["player"][3]
+            diff = player_total - self.last_roll_results_totals
             reward = diff
 
         # calc the difference of damage dealt - damage taken as a number [0 - 100]
@@ -158,7 +156,7 @@ class RollerEnv(gym.Env):
 
         obs, won, did_roll = self.game.reset()
         self.obs = obs
-        self.last_roll_results_totals = obs["roll_results_totals"]
+        self.last_roll_results_totals = obs["player"][2] + obs["player"][3]
 
         return obs, info
 
@@ -174,7 +172,6 @@ class RollerEnv(gym.Env):
             units = calculate_units(
                 self.obs["player"],
                 self.obs["enemy"],
-                self.obs["roll_results_totals"]
             )
             print("\n> Info")
             render_table(INFO_HEADERS, info)

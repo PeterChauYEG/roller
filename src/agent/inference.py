@@ -63,6 +63,7 @@ damage_taken = []
 wins = 0
 losses = 0
 rolls = 0
+hands = []
 
 for i in range(args.timesteps):
     if i % n_log_interval == 0:
@@ -88,10 +89,11 @@ for i in range(args.timesteps):
         )
         diffs.append(round(diff, 2))
 
-        damage_dealt.append(obs["damage_done"][0])
-        damage_taken.append(obs["damage_done"][1])
+        damage_taken.append(obs["damage_done"][0])
+        damage_dealt.append(obs["damage_done"][1])
 
     if terminated or truncated:
+        hands.append(info["hands"])
         obs, info = env.reset()
 
     if args.render:
@@ -100,4 +102,4 @@ for i in range(args.timesteps):
 env.close()
 
 print("\n======== Inference finished ========")
-log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls)
+log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls, hands)

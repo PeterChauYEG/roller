@@ -2,9 +2,10 @@ import numpy as np
 
 from src.env.env_constants import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, MIN_ENEMY_HP, \
     MIN_ENEMY_ATTACK, MIN_ENEMY_DEFENSE, N_TRAITS, MAX_PLAYER_HP, MIN_PLAYER_HP, MAX_ENEMY_HP, MAX_ENEMY_ATTACK, \
-    MAX_ENEMY_DEFENSE
+    MAX_ENEMY_DEFENSE, MIN_PLAYER_ATTACK, MAX_PLAYER_ATTACK, MIN_PLAYER_DEFENSE, MAX_PLAYER_DEFENSE
 from src.env.game_enums import WinnerType, DiceType, EffectType, OperationType
 from src.env.traits_data import TRAITS
+from src.env.unit import Unit
 
 
 class Game():
@@ -16,14 +17,21 @@ class Game():
     n_min_face_value = N_MIN_FACE_VALUE
     traits = TRAITS
 
-    enemy = dict(
-        hp=MIN_ENEMY_HP,
-        attack=MIN_ENEMY_ATTACK,
-        defense=MIN_ENEMY_DEFENSE,
+    enemy = Unit(
+        MIN_ENEMY_HP,
+        MAX_ENEMY_HP,
+        MIN_ENEMY_ATTACK,
+        MAX_ENEMY_ATTACK,
+        MIN_ENEMY_DEFENSE,
+        MAX_ENEMY_DEFENSE
     )
-
-    player = dict(
-        hp=MIN_ENEMY_HP
+    player = Unit(
+        MIN_PLAYER_HP,
+        MAX_PLAYER_HP,
+        MIN_PLAYER_ATTACK,
+        MAX_PLAYER_ATTACK,
+        MIN_PLAYER_DEFENSE,
+        MAX_PLAYER_DEFENSE
     )
 
     dices = dict()
@@ -40,8 +48,22 @@ class Game():
         self.damage_done = [0, 0]
         self.generate_dices()
         self.generate_dice_faces()
-        self.enemy = self.generate_enemy()
-        self.player = self.generate_player()
+        self.player = Unit(
+            MIN_PLAYER_HP,
+            MAX_PLAYER_HP,
+            MIN_PLAYER_ATTACK,
+            MAX_PLAYER_ATTACK,
+            MIN_PLAYER_DEFENSE,
+            MAX_PLAYER_DEFENSE
+        )
+        self.enemy = Unit(
+            MIN_ENEMY_HP,
+            MAX_ENEMY_HP,
+            MIN_ENEMY_ATTACK,
+            MAX_ENEMY_ATTACK,
+            MIN_ENEMY_DEFENSE,
+            MAX_ENEMY_DEFENSE
+        )
 
         return self.new_turn()
 
@@ -54,7 +76,7 @@ class Game():
         prev_damage_done = self.damage_done
         self.damage_done = [0, 0]
 
-        self.enemy = self.generate_enemy_turn_start()
+        self.enemy.turn_start()
 
         return self.get_observation(prev_damage_done), WinnerType.NONE, False
 
@@ -103,12 +125,13 @@ class Game():
     def handle_fight(self):
         attack, defense = self.get_roll_results_totals()
 
-        damage_to_player = max(self.enemy["attack"] - defense, 0)
-        damage_to_enemy = max(attack - self.enemy["defense"], 0)
+        self.player.set_attack(attack)
+        self.player.set_defense(defense)
+
+        damage_to_player = self.player.apply_damage(self.enemy.get_attack())
+        damage_to_enemy = self.enemy.apply_damage(attack)
 
         self.set_damage_done(damage_to_player, damage_to_enemy)
-        self.player["hp"] -= damage_to_player
-        self.enemy["hp"] -= damage_to_enemy
 
     def set_damage_done(self, damage_to_player, damage_to_enemy):
         self.damage_done = [
@@ -117,10 +140,10 @@ class Game():
         ]
 
     def get_winner(self):
-        if self.player["hp"] <= 0:
+        if self.player.get_hp() <= 0:
             return WinnerType.ENEMY
 
-        if self.enemy["hp"] <= 0:
+        if self.enemy.get_hp() <= 0:
             return WinnerType.PLAYER
 
         return WinnerType.NONE
@@ -317,10 +340,15 @@ class Game():
 
     def get_observation(self, prev_damage_done = [0, 0]):
         roll_results_totals = self.get_roll_results_totals_obs()
+
+        self.player.set_attack(roll_results_totals[0])
+        self.player.set_defense(roll_results_totals[1])
+
+        enemy = self.enemy.get_obs()
+        player = self.player.get_obs()
+
         roll_results = self.get_roll_results_obs()
         dice_faces, dice_types = self.get_dices()
-        enemy = self.get_enemy_obs()
-        player = self.get_player_obs()
         traits = self.get_traits_obs()
 
         damage_done = self.get_damage_done_obs()
@@ -331,75 +359,9 @@ class Game():
             dice_faces=dice_faces,
             dice_types=dice_types,
             roll_results=roll_results,
-            roll_results_totals=roll_results_totals,
             n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
             enemy=enemy,
             player=player,
             damage_done=damage_done,
             traits=traits,
         )
-
-    # enemy ===============================================
-    def generate_enemy_hp(self):
-        hp = np.random.randint(MIN_ENEMY_HP, MAX_ENEMY_HP + 1)
-
-        return hp
-
-    def generate_enemy_attack(self):
-        attack = np.random.randint(MIN_ENEMY_ATTACK, MAX_ENEMY_ATTACK + 1)
-        return attack
-
-    def generate_enemy_defense(self):
-        defense = np.random.randint(MIN_ENEMY_DEFENSE, MAX_ENEMY_DEFENSE + 1)
-        return defense
-
-    def generate_enemy(self):
-        hp = self.generate_enemy_hp()
-
-        enemy = dict(
-            max_hp=hp,
-            hp=hp,
-            attack=MIN_ENEMY_ATTACK,
-            defense=MIN_ENEMY_DEFENSE
-        )
-        return enemy
-
-    def generate_enemy_turn_start(self):
-        enemy = dict(
-            max_hp=self.enemy["max_hp"],
-            hp=self.enemy["hp"],
-            attack=self.generate_enemy_attack(),
-            defense=self.generate_enemy_defense()
-        )
-        return enemy
-
-    def get_enemy_obs(self):
-        arr = [
-            self.enemy["max_hp"],
-            self.enemy["hp"],
-            self.enemy["attack"],
-            self.enemy["defense"]
-        ]
-        return np.array(arr, dtype=np.int16)
-
-    # player ===============================================
-    def generate_player_hp(self):
-        hp = np.random.randint(MIN_PLAYER_HP, MAX_PLAYER_HP + 1)
-        return hp
-
-    def generate_player(self):
-        hp = self.generate_player_hp()
-
-        player = dict(
-            max_hp=hp,
-            hp=hp
-        )
-        return player
-
-    def get_player_obs(self):
-        arr = [
-            self.player["max_hp"],
-            self.player["hp"]
-        ]
-
-        return np.array(arr, dtype=np.int16)
