@@ -31,19 +31,19 @@ class RollerEnv(gym.Env):
                 low=0,
                 high=N_MAX_FACE_VALUE,
                 shape=(N_DICES, N_DICE_FACES, 2),
-                dtype=np.int8
+                dtype=np.int16
             ),
             "dice_types": spaces.Box(
                 low=0,
                 high=N_DICE_TYPES,
                 shape=(N_DICES,),
-                dtype=np.int8
+                dtype=np.int16
             ),
             "roll_results": spaces.Box(
                 low=0,
                 high=N_MAX_FACE_VALUE,
                 shape=(N_DICES,2),
-                dtype=np.int8
+                dtype=np.int16
             ),
             "roll_results_totals": spaces.Box(
                 low=0,
@@ -55,7 +55,7 @@ class RollerEnv(gym.Env):
                 low=0,
                 high=N_MAX_ROLLS,
                 shape=(1,),
-                dtype=np.int8
+                dtype=np.int16
             ),
             "enemy": spaces.Box(
                 low=0,
@@ -79,7 +79,7 @@ class RollerEnv(gym.Env):
                 low=0,
                 high=100,
                 shape=(N_TRAITS, N_DICES, 4),
-                dtype=np.int8
+                dtype=np.int16
             ),
         })
 
