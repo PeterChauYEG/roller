@@ -42,8 +42,8 @@ class RollerEnv(gym.Env):
                 dtype=np.int8
             ),
             "roll_results_totals": spaces.Box(
-                low=MIN_ROLL,
-                high=MAX_ROLL,
+                low=0,
+                high=1000,
                 shape=(2,),
                 dtype=np.float16
             ),
@@ -239,7 +239,7 @@ class RollerEnv(gym.Env):
                             attack_add = effect[2]
 
                     row = [
-                        i + 1,
+                        i,
                         effect[0],
                         attack_add,
                         attack_mult,

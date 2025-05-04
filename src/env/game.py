@@ -33,7 +33,13 @@ class Trait:
         self.effect = effect
 
     def get_current_effect(self, level):
-        return self.effect[level]
+        if level == 0:
+            return None
+
+        if self.effect[level]:
+            return self.effect[level]
+
+        return self.get_current_effect(level - 1)
 
     def serialize(self):
         return dict(
@@ -348,21 +354,104 @@ class Game():
 
         return np.array([float(attack_total), float(defense_total)], dtype=np.float16)
 
+    def get_face_traits(self):
+        # trait id (key), level
+        traits = {}
+
+        for i in range(self.n_dices):
+            face = self.roll_results[i]
+            trait = face["trait"]
+
+            if trait not in traits:
+                traits[trait] = 1
+            else:
+                traits[trait] += 1
+
+        return traits
+
+    def get_trait_levels(self, face_traits):
+        trait_levels = []
+
+        for face_trait in face_traits:
+            trait = TRAITS[face_trait]
+            level = trait.get_current_effect(face_trait)
+            trait_levels.append(level)
+
+        return trait_levels
+
+    def get_trait_effects(self, face_traits):
+        trait_effects = []
+
+        for face_trait in face_traits:
+            trait = TRAITS[face_trait]
+            level = face_traits[face_trait]
+
+            effects = trait.get_current_effect(level)
+
+            if effects is None:
+                continue
+
+            for effect in effects:
+                trait_effects.append(effect)
+
+        return trait_effects
+
+    def apply_trait_effects(self, effects, attack_total, defense_total):
+        for effect in effects:
+            if effect["type"] == EffectType.ATTACK:
+                if effect["operation"] == OperationType.ADD:
+                    attack_total += effect["value"]
+                elif effect["operation"] == OperationType.SUBTRACT:
+                    attack_total -= effect["value"]
+                elif effect["operation"] == OperationType.MULTIPLY:
+                    attack_total *= effect["value"]
+                elif effect["operation"] == OperationType.DIVIDE:
+                    attack_total /= effect["value"]
+            elif effect["type"] == EffectType.DEFENSE:
+                if effect["operation"] == OperationType.ADD:
+                    defense_total += effect["value"]
+                elif effect["operation"] == OperationType.SUBTRACT:
+                    defense_total -= effect["value"]
+                elif effect["operation"] == OperationType.MULTIPLY:
+                    defense_total *= effect["value"]
+                elif effect["operation"] == OperationType.DIVIDE:
+                    defense_total /= effect["value"]
+
+        return attack_total, defense_total
+
+    def sort_traits_effects(self, face_traits):
+        sorted_traits = []
+        add_effects = []
+        subtract_effects = []
+        multiply_effects = []
+        divide_effects = []
+
+        for face_trait in face_traits:
+            if face_trait["operation"] == OperationType.ADD:
+                add_effects.append(face_trait)
+            if face_trait["operation"] == OperationType.SUBTRACT:
+                subtract_effects.append(face_trait)
+            if face_trait["operation"] == OperationType.MULTIPLY:
+                multiply_effects.append(face_trait)
+            if face_trait["operation"] == OperationType.DIVIDE:
+                divide_effects.append(face_trait)
+
+        sorted_traits.extend(add_effects)
+        sorted_traits.extend(subtract_effects)
+        sorted_traits.extend(multiply_effects)
+        sorted_traits.extend(divide_effects)
+
+        return sorted_traits
+
     def apply_traits(self, attack_total, defense_total):
-        # face_traits = self.get_face_traits()
-        #
-        # # get the trait effects that apply
-        # effects = self.get_trait_effects()
-        #
-        # # apply add/substract traits first
-        # attack_total, defense_total = self.apply_add_traits(attack_total, defense_total)
-        # attack_total, defense_total = self.apply_subtract_traits(attack_total, defense_total)
-        #
-        # # then apply multiply/divide traits
-        # attack_total, defense_total = self.apply_multiply_traits(attack_total, defense_total)
-        # attack_total, defense_total = self.apply_divide_traits(attack_total, defense_total)
-        #
-        # return the results
+        face_traits = self.get_face_traits()
+
+        # get the trait effects that apply
+        effects = self.get_trait_effects(face_traits)
+
+        sorted_effects = self.sort_traits_effects(effects)
+        attack_total, defense_total = self.apply_trait_effects(sorted_effects, attack_total, defense_total)
+
         return attack_total, defense_total
 
     def get_roll_results_totals(self):
@@ -377,6 +466,7 @@ class Game():
             elif dice_type == DiceType.DEFENSE:
                 defense_total += face["value"]
 
+        attack_total, defense_total = self.apply_traits(attack_total, defense_total)
         return attack_total, defense_total
 
     def get_dices(self):
