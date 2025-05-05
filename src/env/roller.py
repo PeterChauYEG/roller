@@ -6,7 +6,8 @@ from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
 from src.env.game import Game, WinnerType
 from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
     N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MIN_ENEMY_ATTACK, \
-    MIN_ENEMY_DEFENSE, MAX_ENEMY_DEFENSE, MAX_ENEMY_ATTACK, MAX_ENEMY_HP, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP
+    MIN_ENEMY_DEFENSE, MAX_ENEMY_DEFENSE, MAX_ENEMY_ATTACK, MAX_ENEMY_HP, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP, \
+    MIN_ENEMY_HP, MIN_PLAYER_HP, N_MIN_FACE_VALUE
 
 from src.env.utils.render import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
@@ -48,14 +49,24 @@ class RollerEnv(gym.Env):
                 dtype=np.int16
             ),
             "damage_done": spaces.Box(
-                low=0,
-                high=MAX_PLAYER_ATTACK,
+                low=np.array([0,0]),
+                high=np.array([MAX_PLAYER_ATTACK, MAX_ENEMY_ATTACK]),
                 shape=(2,),
                 dtype=np.int16
             ),
             "enemy": spaces.Box(
-                low=0,
-                high=max(MAX_ENEMY_ATTACK, MAX_ENEMY_DEFENSE, MAX_ENEMY_HP),
+                low=np.array([
+                    MIN_ENEMY_HP,
+                    0,
+                    MIN_ENEMY_ATTACK,
+                    MIN_ENEMY_DEFENSE
+                ]),
+                high=np.array([
+                    MAX_ENEMY_HP,
+                    MAX_ENEMY_HP,
+                    MAX_ENEMY_ATTACK,
+                    MAX_ENEMY_DEFENSE
+                ]),
                 shape=(4,),
                 dtype=np.int16
             ),
@@ -66,8 +77,18 @@ class RollerEnv(gym.Env):
                 dtype=np.int16
             ),
             "player": spaces.Box(
-                low=0,
-                high=max(MAX_PLAYER_ATTACK, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP),
+                low=np.array([
+                    MIN_PLAYER_HP,
+                    0,
+                    N_MIN_FACE_VALUE*6,
+                    N_MIN_FACE_VALUE*6
+                ]),
+                high=np.array([
+                    MAX_PLAYER_HP,
+                    MAX_PLAYER_HP,
+                    MAX_PLAYER_ATTACK,
+                    MAX_PLAYER_DEFENSE
+                ]),
                 shape=(4,),
                 dtype=np.int16
             ),
@@ -78,7 +99,7 @@ class RollerEnv(gym.Env):
                 dtype=np.int16
             ),
             "roll_result_values": spaces.Box(
-                low=0,
+                low=N_MIN_FACE_VALUE,
                 high=N_MAX_FACE_VALUE,
                 shape=(N_DICES,),
                 dtype=np.int16

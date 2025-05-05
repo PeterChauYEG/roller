@@ -3,6 +3,17 @@ from src.env.trait import Trait
 
 TRAITS = {
     0: Trait(
+        "None",
+        {
+            1: None,
+            2: None,
+            3: None,
+            4: None,
+            5: None,
+            6: None,
+        }
+    ),
+    1: Trait(
         "Attack Boost",
         {
             1: None,
@@ -25,7 +36,7 @@ TRAITS = {
             }],
         }
     ),
-    1: Trait(
+    2: Trait(
         "Defense Boost",
         {
             1: None,
@@ -48,7 +59,7 @@ TRAITS = {
             }],
         }
     ),
-    2: Trait(
+    3: Trait(
         "Attack",
         {
             1: None,
@@ -79,7 +90,7 @@ TRAITS = {
             }],
         }
     ),
-    3: Trait(
+    4: Trait(
         "Defense",
         {
             1: None,

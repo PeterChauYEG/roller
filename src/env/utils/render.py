@@ -73,7 +73,11 @@ def calculate_dice_faces(all_dice_face_traits, all_dice_face_values, dice_types)
         for j in range(N_DICE_FACES):
             value = all_dice_face_values[i][j]
             trait = all_dice_face_traits[i][j]
+
             label = f"{value} (trait {trait})"
+
+            if trait == 0:
+                label = f"{value}"
 
             dice.append(label)
 
