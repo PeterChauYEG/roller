@@ -123,13 +123,14 @@ class RollerEnv(gym.Env):
             "hands": 0
         }
 
-        obs, won, did_roll = self.game.player_turn(action)
+        obs, won, did_roll, hand_played = self.game.player_turn(action)
         self.obs = obs
 
-        if not did_roll:
-            self.hand += 1
-        else:
+        if did_roll:
             self.rolls += 1
+
+        if hand_played:
+            self.hand += 1
 
         reward, game_over, won = self.calculate_reward(obs, won)
         self.reward = reward
@@ -139,7 +140,7 @@ class RollerEnv(gym.Env):
         if game_over:
             self.last_roll_results_totals = 0
             info["player_won"] = won
-            info["hands"] = self.hand + 1
+            info["hands"] = self.hand
 
             return obs, reward, True, truncated, info
 
@@ -186,7 +187,7 @@ class RollerEnv(gym.Env):
         self.reward = 0
         info = {}
 
-        obs, won, did_roll = self.game.reset()
+        obs, won, did_roll, hand_played = self.game.reset()
         self.obs = obs
         self.last_roll_results_totals = obs["player"][2] + obs["player"][3]
 

@@ -159,7 +159,7 @@ class Game():
 
         return self.new_turn()
 
-    def new_turn(self):
+    def new_turn(self, rolled=False,):
         self.n_remaining_rolls = self.n_max_rolls
         self.roll_results = []
         self.roll_all_dices()
@@ -170,7 +170,7 @@ class Game():
 
         self.enemy.turn_start()
 
-        return self.get_observation(prev_damage_done), WinnerType.NONE, False
+        return self.get_observation(prev_damage_done), WinnerType.NONE, rolled, True
 
     def roll_all_dices(self):
         for dice_i in range(self.n_dices):
@@ -195,11 +195,11 @@ class Game():
             winner = self.get_winner()
 
             if winner != WinnerType.NONE:
-                return self.get_observation(), winner, False
+                return self.get_observation(), winner, should_roll, True
 
-            return self.new_turn()
+            return self.new_turn(should_roll)
 
-        return self.get_observation(), WinnerType.NONE, True
+        return self.get_observation(), WinnerType.NONE, True, False
 
     def roll_dice(self, dice_i):
         face_i = np.random.randint(0, self.n_faces)

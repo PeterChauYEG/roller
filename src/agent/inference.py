@@ -71,8 +71,6 @@ for i in range(args.timesteps):
     obs, reward, terminated, truncated, info = env.step(action)
 
     if terminated:
-        rolls = info["rolls"]
-
         if info["player_won"]:
             wins += 1
         elif not info["player_won"]:
@@ -90,12 +88,17 @@ for i in range(args.timesteps):
         damage_taken.append(obs["damage_done"][0])
         damage_dealt.append(obs["damage_done"][1])
 
-    if terminated or truncated:
-        hands.append(info["hands"])
-        obs, info = env.reset()
-
     if args.render:
         env.render()
+
+    if terminated or truncated:
+        hands.append(info["hands"])
+        rolls += info["rolls"]
+
+        obs, info = env.reset()
+
+        if args.render:
+            env.render()
 
 env.close()
 
