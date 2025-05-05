@@ -181,7 +181,7 @@ class Game():
         should_roll = np.sum(roll_dices_i) > 0
 
         if should_roll:
-            for i in range(len(roll_dices_i)):
+            for i in range(N_DICES):
                 if roll_dices_i[i] == 0:
                     continue
 

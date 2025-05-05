@@ -32,8 +32,7 @@ def calculate_action(action):
 
 def calculate_roll_results(roll_result_traits, roll_result_values):
     res = []
-    for i in roll_result_traits:
-        trait = roll_result_traits[i]
+    for i, trait in enumerate(roll_result_traits):
         value = roll_result_values[i]
         res.append(f"{value} (trait {trait})")
 
