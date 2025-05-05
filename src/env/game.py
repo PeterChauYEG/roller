@@ -6,6 +6,7 @@ from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VAL
 from src.env.dice import Dice
 from src.env.game_enums import WinnerType, DiceType, EffectType, OperationType
 from src.env.data.traits import TRAITS
+from src.env.trait_manager import TraitManager
 from src.env.unit import Unit
 
 
@@ -124,6 +125,7 @@ class Game():
             MAX_PLAYER_DEFENSE
         )
 
+        self.trait_manager = TraitManager()
         self.dices = []
         self.roll_results = []
         self.damage_done = [0, 0]
@@ -132,10 +134,12 @@ class Game():
 
     # game flow ===============================================
     def reset(self):
-        self.dices = []
-        self.roll_results = []
         self.damage_done = [0, 0]
-        self.generate_dices()
+        self.roll_results = []
+
+        self.trait_manager = TraitManager()
+        self.dices = self.generate_dices()
+
         self.player = Unit(
             MIN_PLAYER_HP,
             MAX_PLAYER_HP,
@@ -238,10 +242,12 @@ class Game():
 
     # generators ===============================================
     def generate_dices(self):
-        self.dices = []
+        dices = []
 
         for i in range(self.n_dices):
-            self.dices.append(Dice(i))
+            dices.append(Dice(i, self.trait_manager))
+
+        return dices
 
     # getters ===============================================
     def get_roll_results_totals_obs(self):

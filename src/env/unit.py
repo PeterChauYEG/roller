@@ -22,9 +22,13 @@ class Unit:
             min=min_defense,
             max=max_defense
         )
-        self.generate_player_hp()
-        self.generate_attack()
-        self.generate_defense()
+
+        hp = self.generate_player_hp()
+        self.hp = hp
+        self.max_hp = hp
+
+        self.attack = self.generate_attack()
+        self.defense = self.generate_defense()
 
     # turn
     def turn_start(self):
@@ -39,20 +43,19 @@ class Unit:
 
     # generators
     def generate_player_hp(self):
-        self.hp = np.random.randint(
+        return np.random.randint(
             self.hp_range["min"],
             self.hp_range["max"] + 1
         )
-        self.max_hp = self.hp
 
     def generate_attack(self):
-        self.attack = np.random.randint(
+        return np.random.randint(
             self.attack_range["min"],
             self.attack_range["max"] + 1
         )
 
     def generate_defense(self):
-        self.defense = np.random.randint(
+        return np.random.randint(
             self.defense_range["min"],
             self.defense_range["max"] + 1
         )
