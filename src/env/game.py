@@ -97,7 +97,7 @@ def get_traits_obs():
         trait = TRAITS[i]
         traits.append(trait.serialize_obs())
 
-    return np.array(traits, dtype=np.int8)
+    return np.array(traits, dtype=np.int16).flatten()
 
 
 class Game():
@@ -319,9 +319,9 @@ class Game():
             all_dice_types.append(dice_type)
 
         return (
-            np.array(all_dice_face_values, dtype=np.int8),
-            np.array(all_dice_face_traits, dtype=np.int8),
-            np.array(all_dice_types, dtype=np.int8),
+            np.array(all_dice_face_values, dtype=np.int16).flatten(),
+            np.array(all_dice_face_traits, dtype=np.int16).flatten(),
+            np.array(all_dice_types, dtype=np.int16),
         )
 
     def get_damage_done_obs(self):
@@ -339,8 +339,8 @@ class Game():
             roll_result_traits.append(face_trait)
 
         return (
-            np.array(roll_result_values, dtype=np.int8),
-            np.array(roll_result_traits, dtype=np.int8)
+            np.array(roll_result_values, dtype=np.int16),
+            np.array(roll_result_traits, dtype=np.int16)
         )
 
     def get_observation(self, prev_damage_done = [0, 0]):
@@ -366,7 +366,7 @@ class Game():
             all_dice_types=all_dice_types,
             damage_done=damage_done,
             enemy=enemy,
-            n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int8),
+            n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int16),
             player=player,
             roll_result_traits=roll_result_traits,
             roll_result_values=roll_result_values,

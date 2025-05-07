@@ -70,8 +70,9 @@ def calculate_dice_faces(all_dice_face_traits, all_dice_face_values, dice_types)
         ]
 
         for j in range(N_DICE_FACES):
-            value = all_dice_face_values[i][j]
-            trait = all_dice_face_traits[i][j]
+            flat_i = i * N_DICE_FACES + j
+            value = all_dice_face_values[flat_i]
+            trait = all_dice_face_traits[flat_i]
 
             label = f"{value} (trait {trait})"
 
@@ -88,11 +89,11 @@ def calculate_traits(traits):
     res = []
 
     for i in range(N_TRAITS):
-        trait = traits[i]
         trait_label = f"Trait {i}"
 
         for j in range(N_DICES):
-            effect = trait[j]
+            flat_index = i * N_DICES * 4 + j * 4
+            effect = traits[flat_index:flat_index + 4]
             if effect.sum() == 0:
                 continue
 

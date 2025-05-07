@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 ## train
 ```
-python -m src.agent.trainer --timesteps 4000000 \
+python -m src.agent.trainer --timesteps 1000000 \
 --batch_size 256 \
 --save_checkpoint_frequency 100000 \
 --linear_lr_schedule \
@@ -37,6 +37,6 @@ python -m src.agent.inference --timesteps 10 \
 --render \
 --model_path model.zip
 
-python -m src.agent.inference --timesteps 100000 \
+python -m src.agent.inference --timesteps 1000 \
 --model_path model.zip
 ```

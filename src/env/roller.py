@@ -33,13 +33,13 @@ class RollerEnv(gym.Env):
             "all_dice_face_traits": spaces.Box(
                 low=0,
                 high=N_TRAITS,
-                shape=(N_DICES, N_DICE_FACES,),
+                shape=(N_DICES*N_DICE_FACES,),
                 dtype=np.int16
             ),
             "all_dice_face_values": spaces.Box(
                 low=0,
                 high=N_MAX_FACE_VALUE,
-                shape=(N_DICES, N_DICE_FACES,),
+                shape=(N_DICES*N_DICE_FACES,),
                 dtype=np.int16
             ),
             "all_dice_types": spaces.Box(
@@ -107,7 +107,7 @@ class RollerEnv(gym.Env):
             "traits": spaces.Box(
                 low=0,
                 high=100,
-                shape=(N_TRAITS, N_DICES, 4),
+                shape=(N_TRAITS*N_DICES*4,),
                 dtype=np.int16
             ),
         })
