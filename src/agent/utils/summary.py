@@ -71,4 +71,4 @@ def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls, hands):
     plot_histogram("Difference of damage dealt vs taken (%)", "Difference (%)", "Frequency", diff_mean, diff_median, diff_best, diff_worst, diffs)
     plot_histogram("Damage dealt", "Damage dealt", "Frequency", damage_dealt_mean, damage_dealt_median, damage_dealt_best, damage_dealt_worst, damage_dealt)
     plot_histogram("Damage taken", "Damage taken", "Frequency", damage_taken_mean, damage_taken_median, damage_taken_best, damage_taken_worst, damage_taken)
-    plot_histogram("Hands / game", "Hands", "Frequency", hands_mean, hands_median, hands_best, hands_worst, hands)
+    plot_histogram("Hands per game", "Hands", "Frequency", hands_mean, hands_median, hands_best, hands_worst, hands)
