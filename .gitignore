@@ -2,3 +2,7 @@ venv
 .idea
 experiments
 __pycache__
+Damage dealt.png
+Damage taken.png
+Hands per game.png
+Difference of damage dealt vs taken.png
