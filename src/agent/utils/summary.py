@@ -55,7 +55,9 @@ def plot_histogram(title, xlabel, ylabel, mean, median, best, worst, data):
     plt.axvline(best, color="green", linestyle="dashed", linewidth=1)
     plt.axvline(worst, color="purple", linestyle="dashed", linewidth=1)
     plt.legend({"Mean": mean, "Median": median, "Best": best, "Worst": worst})
+    plt.savefig(f"{title}.png")
     plt.show()
+
 
 def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls, hands):
     log_win_losses(w, l)
