@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ## train
 ```
 python -m src.agent.trainer --timesteps 1000000 \
---batch_size 256 \
+--batch_size 512 \
 --save_checkpoint_frequency 100000 \
 --linear_lr_schedule \
 --experiment_name lower_player_damage \

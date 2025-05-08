@@ -30,21 +30,15 @@ class RollerEnv(gym.Env):
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
         self.observation_space = spaces.Dict({
-            "all_dice_face_traits": spaces.Box(
+            "roll_result_traits": spaces.Box(
                 low=0,
                 high=N_TRAITS,
-                shape=(N_DICES*N_DICE_FACES,),
+                shape=(N_DICES,),
                 dtype=np.int16
             ),
-            "all_dice_face_values": spaces.Box(
-                low=0,
+            "roll_result_values": spaces.Box(
+                low=N_MIN_FACE_VALUE,
                 high=N_MAX_FACE_VALUE,
-                shape=(N_DICES*N_DICE_FACES,),
-                dtype=np.int16
-            ),
-            "all_dice_types": spaces.Box(
-                low=0,
-                high=N_DICE_TYPES,
                 shape=(N_DICES,),
                 dtype=np.int16
             ),
@@ -52,6 +46,22 @@ class RollerEnv(gym.Env):
                 low=np.array([0,0]),
                 high=np.array([MAX_PLAYER_ATTACK, MAX_ENEMY_ATTACK]),
                 shape=(2,),
+                dtype=np.int16
+            ),
+            "player": spaces.Box(
+                low=np.array([
+                    MIN_PLAYER_HP,
+                    0,
+                    N_MIN_FACE_VALUE*6,
+                    N_MIN_FACE_VALUE*6
+                ]),
+                high=np.array([
+                    MAX_PLAYER_HP,
+                    MAX_PLAYER_HP,
+                    MAX_PLAYER_ATTACK,
+                    MAX_PLAYER_DEFENSE
+                ]),
+                shape=(4,),
                 dtype=np.int16
             ),
             "enemy": spaces.Box(
@@ -76,38 +86,28 @@ class RollerEnv(gym.Env):
                 shape=(1,),
                 dtype=np.int16
             ),
-            "player": spaces.Box(
-                low=np.array([
-                    MIN_PLAYER_HP,
-                    0,
-                    N_MIN_FACE_VALUE*6,
-                    N_MIN_FACE_VALUE*6
-                ]),
-                high=np.array([
-                    MAX_PLAYER_HP,
-                    MAX_PLAYER_HP,
-                    MAX_PLAYER_ATTACK,
-                    MAX_PLAYER_DEFENSE
-                ]),
-                shape=(4,),
-                dtype=np.int16
-            ),
-            "roll_result_traits": spaces.Box(
-                low=0,
-                high=N_TRAITS,
-                shape=(N_DICES,),
-                dtype=np.int16
-            ),
-            "roll_result_values": spaces.Box(
-                low=N_MIN_FACE_VALUE,
-                high=N_MAX_FACE_VALUE,
-                shape=(N_DICES,),
-                dtype=np.int16
-            ),
             "traits": spaces.Box(
                 low=0,
                 high=100,
                 shape=(N_TRAITS*N_DICES*4,),
+                dtype=np.int16
+            ),
+            "all_dice_face_traits": spaces.Box(
+                low=0,
+                high=N_TRAITS,
+                shape=(N_DICES*N_DICE_FACES,),
+                dtype=np.int16
+            ),
+            "all_dice_face_values": spaces.Box(
+                low=0,
+                high=N_MAX_FACE_VALUE,
+                shape=(N_DICES*N_DICE_FACES,),
+                dtype=np.int16
+            ),
+            "all_dice_types": spaces.Box(
+                low=0,
+                high=N_DICE_TYPES,
+                shape=(N_DICES,),
                 dtype=np.int16
             ),
         })
