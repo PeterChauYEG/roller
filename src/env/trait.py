@@ -35,8 +35,4 @@ class Trait:
                 ]
                 serialized_effect.append(effect)
 
-        if len(serialized_effect) < N_DICES:
-            for i in range(N_DICES - len(serialized_effect)):
-                serialized_effect.append([0, 0, 0, 0])
-
         return serialized_effect

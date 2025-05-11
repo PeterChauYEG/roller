@@ -2,12 +2,13 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
-from src.env.game import Game, WinnerType
+from src.env.utils.env import has_damage_been_done, get_damage_diff_percent, get_number_of_trait_effects
+from src.env.game import Game
 from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_TRAITS, \
-    N_ACTIONS, N_DICE_TYPES, DAMAGE_REWARD_MULTIPLIER, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MIN_ENEMY_ATTACK, \
+    N_ACTIONS, LOSE_REWARD, WIN_REWARD, MAX_PLAYER_ATTACK, MIN_ENEMY_ATTACK, \
     MIN_ENEMY_DEFENSE, MAX_ENEMY_DEFENSE, MAX_ENEMY_ATTACK, MAX_ENEMY_HP, MAX_PLAYER_DEFENSE, MAX_PLAYER_HP, \
-    MIN_ENEMY_HP, MIN_PLAYER_HP, N_MIN_FACE_VALUE
+    MIN_ENEMY_HP, MIN_PLAYER_HP, N_MIN_FACE_VALUE, BETTER_ROLL_REWARD, WORST_ROLL_REWARD, BETTER_DAMAGE_REWARD, \
+    WORST_DAMAGE_REWARD
 
 from src.env.utils.render import calculate_traits, TRAITS_HEADERS, calculate_info, INFO_HEADERS, calculate_action, \
     ROLL_HEADERS, calculate_roll_results, calculate_units, UNIT_HEADERS, calculate_dice_faces, DICES_HEADERS, \
@@ -27,8 +28,12 @@ class RollerEnv(gym.Env):
         self.last_roll_results_totals = 0
         self.hand = 0
         self.rolls = 0
+        self.battles_won = 0
 
         self.action_space = spaces.MultiBinary(N_ACTIONS)
+
+        trait_effects = get_number_of_trait_effects()
+
         self.observation_space = spaces.Dict({
             "roll_result_traits": spaces.Box(
                 low=0,
@@ -89,7 +94,7 @@ class RollerEnv(gym.Env):
             "traits": spaces.Box(
                 low=0,
                 high=100,
-                shape=(N_TRAITS*N_DICES*4,),
+                shape=(trait_effects*4,),
                 dtype=np.int16
             ),
             "all_dice_face_traits": spaces.Box(
@@ -103,13 +108,7 @@ class RollerEnv(gym.Env):
                 high=N_MAX_FACE_VALUE,
                 shape=(N_DICES*N_DICE_FACES,),
                 dtype=np.int16
-            ),
-            "all_dice_types": spaces.Box(
-                low=0,
-                high=N_DICE_TYPES,
-                shape=(N_DICES,),
-                dtype=np.int16
-            ),
+            )
         })
 
         self.game = Game()
@@ -120,10 +119,11 @@ class RollerEnv(gym.Env):
 
         info = {
             "player_won": False,
-            "hands": 0
+            "hands": 0,
+            "battles_won": 0,
         }
 
-        obs, won, did_roll, hand_played = self.game.player_turn(action)
+        obs, game_over, did_roll, hand_played, next_battle = self.game.player_turn(action)
         self.obs = obs
 
         if did_roll:
@@ -132,15 +132,21 @@ class RollerEnv(gym.Env):
         if hand_played:
             self.hand += 1
 
-        reward, game_over, won = self.calculate_reward(obs, won)
+        reward = self.calculate_reward(obs, game_over, next_battle)
         self.reward = reward
 
         info["rolls"] = self.rolls
 
+        if next_battle:
+            info["hands"] = self.hand
+            info["player_won"] = next_battle
+            self.battles_won += 1
+
         if game_over:
             self.last_roll_results_totals = 0
-            info["player_won"] = won
             info["hands"] = self.hand
+            info["battles_won"] = self.battles_won
+            self.battles_won = 0
 
             return obs, reward, True, truncated, info
 
@@ -148,22 +154,27 @@ class RollerEnv(gym.Env):
 
         return obs, reward, False, truncated, info
 
-    def calculate_reward(self, obs, won):
+    def calculate_reward(self, obs, game_over, won):
         reward = 0
 
-        if won != WinnerType.NONE:
-            if won == WinnerType.PLAYER:
-                reward = WIN_REWARD
-            elif won == WinnerType.ENEMY:
-                reward = -LOSE_REWARD
+        if won:
+            reward = WIN_REWARD
+            return reward
 
-            return reward, True, won == WinnerType.PLAYER,
+        if game_over:
+            if not won:
+                reward = -LOSE_REWARD
+                return reward
 
         # calc the value of the roll
         if self.last_roll_results_totals > 0:
             player_total = obs["player"][2] + obs["player"][3]
             diff = player_total - self.last_roll_results_totals
-            reward = diff
+
+            if diff >= 0:
+                reward += BETTER_ROLL_REWARD
+            else:
+                reward += WORST_ROLL_REWARD
 
         # calc the difference of damage dealt - damage taken as a number [0 - 100]
         if has_damage_been_done(obs["damage_done"]):
@@ -172,12 +183,15 @@ class RollerEnv(gym.Env):
                 obs["player"][0],
                 obs["enemy"][0]
             )
-            diff = diff * DAMAGE_REWARD_MULTIPLIER
-            reward += diff
+
+            if diff >= 0:
+                reward += diff * BETTER_DAMAGE_REWARD
+            else:
+                reward += diff * WORST_DAMAGE_REWARD
 
         reward = float(round(reward, 2))
 
-        return reward, False, False
+        return reward
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -185,9 +199,11 @@ class RollerEnv(gym.Env):
         self.hand = 0
         self.rolls = 0
         self.reward = 0
+        self.battles_won = 0
+        self.last_roll_results_totals = 0
         info = {}
 
-        obs, won, did_roll, hand_played = self.game.reset()
+        obs, game_over, did_roll, hand_played, next_battle = self.game.reset()
         self.obs = obs
         self.last_roll_results_totals = obs["player"][2] + obs["player"][3]
 
@@ -224,7 +240,6 @@ class RollerEnv(gym.Env):
             dice_faces = calculate_dice_faces(
                 self.obs["all_dice_face_traits"],
                 self.obs["all_dice_face_values"],
-                self.obs["all_dice_types"]
             )
             traits = calculate_traits(self.obs["traits"])
 

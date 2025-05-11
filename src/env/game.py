@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, N_MAX_FACE_VALUE, N_MIN_FACE_VALUE, MIN_ENEMY_HP, \
+from src.env.data.game import N_DICES, N_MAX_ROLLS, N_DICE_FACES, MIN_ENEMY_HP, \
     MIN_ENEMY_ATTACK, MIN_ENEMY_DEFENSE, N_TRAITS, MAX_PLAYER_HP, MIN_PLAYER_HP, MAX_ENEMY_HP, MAX_ENEMY_ATTACK, \
     MAX_ENEMY_DEFENSE, MIN_PLAYER_ATTACK, MAX_PLAYER_ATTACK, MIN_PLAYER_DEFENSE, MAX_PLAYER_DEFENSE
 from src.env.dice import Dice
@@ -95,7 +95,14 @@ def get_traits_obs():
     traits = []
     for i in range(N_TRAITS):
         trait = TRAITS[i]
-        traits.append(trait.serialize_obs())
+        serialized_trait = trait.serialize_obs()
+
+        if len(serialized_trait) == 0:
+            continue
+
+        # append each element of the serialized trait
+        for j in range(len(serialized_trait)):
+            traits.append(serialized_trait[j])
 
     return np.array(traits, dtype=np.int16).flatten()
 
@@ -107,6 +114,7 @@ class Game():
         self.n_dices = N_DICES
         self.n_faces = N_DICE_FACES
         self.traits = TRAITS
+        self.enemies_defeated = 0
 
         self.enemy = Unit(
             MIN_ENEMY_HP,
@@ -135,7 +143,7 @@ class Game():
     # game flow ===============================================
     def reset(self):
         self.damage_done = [0, 0]
-        self.roll_results = []
+        self.enemies_defeated = 0
 
         self.trait_manager = TraitManager()
         self.dices = self.generate_dices()
@@ -159,7 +167,22 @@ class Game():
 
         return self.new_turn()
 
-    def new_turn(self, rolled=False,):
+    def next_battle(self, rolled):
+        self.enemies_defeated += 1
+
+        self.enemy = Unit(
+            MIN_ENEMY_HP,
+            MAX_ENEMY_HP,
+            MIN_ENEMY_ATTACK,
+            MAX_ENEMY_ATTACK,
+            MIN_ENEMY_DEFENSE,
+            MAX_ENEMY_DEFENSE
+        )
+
+        return self.new_turn(rolled, winner=WinnerType.NONE, hand_played=True, new_battle=True)
+
+    def new_turn(self, rolled=False, winner=WinnerType.NONE, hand_played=False, new_battle=False):
+
         self.n_remaining_rolls = self.n_max_rolls
         self.roll_results = []
         self.roll_all_dices()
@@ -170,7 +193,9 @@ class Game():
 
         self.enemy.turn_start()
 
-        return self.get_observation(prev_damage_done), WinnerType.NONE, rolled, True
+        game_over = winner == WinnerType.ENEMY
+
+        return self.get_observation(prev_damage_done), game_over, rolled, hand_played, new_battle
 
     def roll_all_dices(self):
         for dice_i in range(self.n_dices):
@@ -178,7 +203,13 @@ class Game():
             self.roll_results.append(face)
 
     def player_turn(self, roll_dices_i):
+        game_over = False
+        rolled = True
+        hand_played = False
+        new_battle = False
+
         should_roll = np.sum(roll_dices_i) > 0
+        rolled = should_roll
 
         if should_roll:
             for i in range(N_DICES):
@@ -193,13 +224,18 @@ class Game():
         if self.n_remaining_rolls == 0 or not should_roll:
             self.handle_fight()
             winner = self.get_winner()
+            hand_played = True
 
-            if winner != WinnerType.NONE:
-                return self.get_observation(), winner, should_roll, True
+            if winner == WinnerType.ENEMY:
+                game_over = True
+                return self.get_observation(), game_over, rolled, hand_played, new_battle
 
-            return self.new_turn(should_roll)
+            if winner == WinnerType.PLAYER:
+                return self.next_battle(rolled)
 
-        return self.get_observation(), WinnerType.NONE, True, False
+            return self.new_turn(rolled, winner, hand_played, new_battle)
+
+        return self.get_observation(), game_over, rolled, hand_played, new_battle
 
     def roll_dice(self, dice_i):
         face_i = np.random.randint(0, self.n_faces)
@@ -301,10 +337,8 @@ class Game():
     def get_all_dices_obs(self):
         all_dice_face_values = []
         all_dice_face_traits = []
-        all_dice_types = []
 
         for dice in self.dices:
-            dice_type = dice.get_type().value
             dice_face_values = []
             dice_face_traits = []
 
@@ -316,12 +350,10 @@ class Game():
 
             all_dice_face_values.append(dice_face_values)
             all_dice_face_traits.append(dice_face_traits)
-            all_dice_types.append(dice_type)
 
         return (
             np.array(all_dice_face_values, dtype=np.int16).flatten(),
             np.array(all_dice_face_traits, dtype=np.int16).flatten(),
-            np.array(all_dice_types, dtype=np.int16),
         )
 
     def get_damage_done_obs(self):
@@ -353,7 +385,7 @@ class Game():
         player = self.player.get_obs()
 
         roll_result_values, roll_result_traits = self.get_roll_result_obs()
-        all_dice_face_values, all_dice_face_traits, all_dice_types = self.get_all_dices_obs()
+        all_dice_face_values, all_dice_face_traits = self.get_all_dices_obs()
         traits = get_traits_obs()
 
         damage_done = self.get_damage_done_obs()
@@ -363,7 +395,6 @@ class Game():
         return dict(
             all_dice_face_traits=all_dice_face_traits,
             all_dice_face_values=all_dice_face_values,
-            all_dice_types=all_dice_types,
             damage_done=damage_done,
             enemy=enemy,
             n_remaining_rolls=np.array([self.n_remaining_rolls], dtype=np.int16),

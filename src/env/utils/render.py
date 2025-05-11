@@ -57,12 +57,12 @@ def calculate_units(player, enemy):
 
     return [player, enemy]
 
-def calculate_dice_faces(all_dice_face_traits, all_dice_face_values, dice_types):
+def calculate_dice_faces(all_dice_face_traits, all_dice_face_values):
     res = []
 
     for i in range(N_DICES):
-        dice_type = dice_types[i]
-        dice_type_label = "Attack" if dice_type == 0 else "Defense"
+        dice_type = i < N_DICES // 2
+        dice_type_label = "Attack" if dice_type == 1 else "Defense"
 
         dice = [
             i + 1,

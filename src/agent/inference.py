@@ -53,7 +53,7 @@ if args.render:
     env.render()
 
 print("\n======== Starting inference ========")
-print("Steps", timesteps, "| Rerolls / turn", n_rerolls)
+print("Steps", args.timesteps, "| Rerolls / turn", n_rerolls)
 
 diffs = []
 damage_dealt = []
@@ -62,6 +62,7 @@ wins = 0
 losses = 0
 rolls = 0
 hands = []
+battles_won = []
 
 for i in range(args.timesteps):
     if i % n_log_interval == 0:
@@ -70,10 +71,11 @@ for i in range(args.timesteps):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
 
+    if info["player_won"]:
+        wins += 1
     if terminated:
-        if info["player_won"]:
-            wins += 1
-        elif not info["player_won"]:
+        battles_won.append(info["battles_won"])
+        if not info["player_won"]:
             losses += 1
 
     diff = 0
@@ -103,4 +105,4 @@ for i in range(args.timesteps):
 env.close()
 
 print("\n======== Inference finished ========")
-log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls, hands)
+log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls, hands, battles_won)
