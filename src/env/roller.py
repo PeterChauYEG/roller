@@ -1,51 +1,51 @@
 import gymnasium as gym
-import numpy as np
 from gymnasium import spaces
 
-from src.env.utils.env import (
-    has_damage_been_done,
-    get_damage_diff_percent,
-    get_number_of_trait_effects,
-)
-from src.env.game import Game
+import numpy as np
+
 from src.env.data.game import (
-    N_DICES,
-    N_MAX_ROLLS,
-    N_DICE_FACES,
-    N_MAX_FACE_VALUE,
-    N_TRAITS,
-    N_ACTIONS,
+    BETTER_DAMAGE_REWARD,
+    BETTER_ROLL_REWARD,
     LOSE_REWARD,
-    WIN_REWARD,
-    MAX_PLAYER_ATTACK,
-    MIN_ENEMY_ATTACK,
-    MIN_ENEMY_DEFENSE,
-    MAX_ENEMY_DEFENSE,
     MAX_ENEMY_ATTACK,
+    MAX_ENEMY_DEFENSE,
     MAX_ENEMY_HP,
+    MAX_PLAYER_ATTACK,
     MAX_PLAYER_DEFENSE,
     MAX_PLAYER_HP,
+    MIN_ENEMY_ATTACK,
+    MIN_ENEMY_DEFENSE,
     MIN_ENEMY_HP,
     MIN_PLAYER_HP,
+    N_ACTIONS,
+    N_DICES,
+    N_DICE_FACES,
+    N_MAX_FACE_VALUE,
+    N_MAX_ROLLS,
     N_MIN_FACE_VALUE,
-    BETTER_ROLL_REWARD,
-    WORST_ROLL_REWARD,
-    BETTER_DAMAGE_REWARD,
+    N_TRAITS,
+    WIN_REWARD,
     WORST_DAMAGE_REWARD,
+    WORST_ROLL_REWARD,
 )
-
+from src.env.game import Game
+from src.env.utils.env import (
+    get_damage_diff_percent,
+    get_number_of_trait_effects,
+    has_damage_been_done,
+)
 from src.env.utils.render import (
-    calculate_traits,
-    TRAITS_HEADERS,
-    calculate_info,
-    INFO_HEADERS,
-    calculate_action,
-    ROLL_HEADERS,
-    calculate_roll_results,
-    calculate_units,
-    UNIT_HEADERS,
-    calculate_dice_faces,
     DICES_HEADERS,
+    INFO_HEADERS,
+    ROLL_HEADERS,
+    TRAITS_HEADERS,
+    UNIT_HEADERS,
+    calculate_action,
+    calculate_dice_faces,
+    calculate_info,
+    calculate_roll_results,
+    calculate_traits,
+    calculate_units,
     render_table,
 )
 
@@ -89,7 +89,12 @@ class RollerEnv(gym.Env):
                 ),
                 "player": spaces.Box(
                     low=np.array(
-                        [MIN_PLAYER_HP, 0, N_MIN_FACE_VALUE * 6, N_MIN_FACE_VALUE * 6]
+                        [
+                            MIN_PLAYER_HP,
+                            0,
+                            N_MIN_FACE_VALUE * 6,
+                            N_MIN_FACE_VALUE * 6,
+                        ]
                     ),
                     high=np.array(
                         [
@@ -150,8 +155,8 @@ class RollerEnv(gym.Env):
             "battles_won": 0,
         }
 
-        obs, game_over, did_roll, hand_played, next_battle = self.game.player_turn(
-            action
+        obs, game_over, did_roll, hand_played, next_battle = (
+            self.game.player_turn(action)
         )
         self.obs = obs
 
@@ -205,7 +210,8 @@ class RollerEnv(gym.Env):
             else:
                 reward += WORST_ROLL_REWARD
 
-        # calc the difference of damage dealt - damage taken as a number [0 - 100]
+        # calc the difference of damage dealt - damage taken as a number
+        # [0 - 100]
         if has_damage_been_done(obs["damage_done"]):
             diff = get_damage_diff_percent(
                 obs["damage_done"], obs["player"][0], obs["enemy"][0]
@@ -237,11 +243,17 @@ class RollerEnv(gym.Env):
         return obs, info
 
     def render(self):
-        print("================== hand {} ======================".format(self.hand))
+        print(
+            "================== hand {} ======================".format(
+                self.hand
+            )
+        )
 
         if self.obs is not None:
             info = calculate_info(
-                self.obs["damage_done"], self.reward, self.obs["n_remaining_rolls"]
+                self.obs["damage_done"],
+                self.reward,
+                self.obs["n_remaining_rolls"],
             )
             units = calculate_units(
                 self.obs["player"],

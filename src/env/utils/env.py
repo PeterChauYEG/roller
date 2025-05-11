@@ -1,4 +1,4 @@
-from src.env.data.game import N_TRAITS, N_DICE_FACES
+from src.env.data.game import N_DICE_FACES, N_TRAITS
 from src.env.data.traits import TRAITS
 
 

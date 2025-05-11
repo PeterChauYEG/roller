@@ -43,7 +43,9 @@ class Unit:
         )
 
     def generate_attack(self):
-        return np.random.randint(self.attack_range["min"], self.attack_range["max"] + 1)
+        return np.random.randint(
+            self.attack_range["min"], self.attack_range["max"] + 1
+        )
 
     def generate_defense(self):
         return np.random.randint(

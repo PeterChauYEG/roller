@@ -1,7 +1,8 @@
+from src.env.data.game import N_DICES, N_DICE_FACES, N_TRAITS
+from src.env.game import EffectType, OperationType
+
 from tabulate import tabulate
 
-from src.env.game import EffectType, OperationType
-from src.env.data.game import N_DICES, N_DICE_FACES, N_TRAITS
 
 ROLL_HEADERS = ["Dice 1", "Dice 2", "Dice 3", "Dice 4", "Dice 5", "Dice 6"]
 UNIT_HEADERS = ["Name", "HP", "Max HP", "Attack", "Defense"]
@@ -16,7 +17,14 @@ DICES_HEADERS = [
     "Face 5",
     "Face 6",
 ]
-TRAITS_HEADERS = ["Trait", "Level", "Attack +", "Attack *", "Defense +", "Defense *"]
+TRAITS_HEADERS = [
+    "Trait",
+    "Level",
+    "Attack +",
+    "Attack *",
+    "Defense +",
+    "Defense *",
+]
 
 
 def render_table(headers, data):

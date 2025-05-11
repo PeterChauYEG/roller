@@ -1,14 +1,15 @@
-import src.env
-
 import argparse
 import os
 import pathlib
 from typing import Callable
 
 import gymnasium as gym
-from stable_baselines3.common.env_checker import check_env
+
+import src.env
+
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.env_checker import check_env
 
 experiment_dir = "experiments"
 
@@ -26,40 +27,32 @@ parser.add_argument(
     default=save_freq,
     type=int,
     help=(
-        "If set, will save checkpoints every 'frequency' environment steps. "
-        "Requires a unique --experiment_name or --experiment_dir for each run. "
-        "Does not need --save_model_path to be set. "
+        "If set, will save checkpoints every 'frequency' environment steps."
     ),
 )
 parser.add_argument(
     "--linear_lr_schedule",
     default=False,
     action="store_true",
-    help="Use a linear LR schedule for training. If set, learning rate will decrease until it reaches 0 at "
-    "--timesteps"
-    "value. Note: On resuming training, the schedule will reset. If disabled, constant LR will be used.",
+    help="Use a linear LR schedule for training.",
 )
 parser.add_argument(
     "--experiment_name",
     default=experiment_name,
     type=str,
-    help="The name of the experiment, which will be displayed in tensorboard and "
-    "for checkpoint directory and name (if enabled).",
+    help="The name of the experiment, which will be displayed in tensorboard",
 )
 parser.add_argument(
     "--save_model_path",
     default=save_model_path,
     type=str,
-    help="The path to use for saving the trained sb3 model after training is complete. Saved model can be used later "
-    "to resume training. Extension will be set to .zip",
+    help="Used for saving the trained sb3 model after training is complete",
 )
 parser.add_argument(
     "--timesteps",
     default=total_timesteps,
     type=int,
-    help="The number of environment steps to train for, default is 1_000_000. If resuming from a saved model, "
-    "it will continue training for this amount of steps from the saved state without counting previously trained "
-    "steps",
+    help="The number of environment steps to train for, default is 1_000_000.",
 )
 parser.add_argument(
     "--batch_size",
@@ -71,7 +64,9 @@ parser.add_argument(
 args, extras = parser.parse_known_args()
 
 # paths
-path_checkpoint = os.path.join(experiment_dir, args.experiment_name + "_checkpoints")
+path_checkpoint = os.path.join(
+    experiment_dir, args.experiment_name + "_checkpoints"
+)
 abs_path_checkpoint = os.path.abspath(path_checkpoint)
 
 
@@ -125,7 +120,9 @@ checkpoint_callback = CheckpointCallback(
     name_prefix=args.experiment_name,
 )
 
-learn_arguments = dict(total_timesteps=args.timesteps, callback=checkpoint_callback)
+learn_arguments = dict(
+    total_timesteps=args.timesteps, callback=checkpoint_callback
+)
 
 model.learn(**learn_arguments)
 

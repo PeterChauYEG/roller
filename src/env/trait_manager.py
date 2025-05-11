@@ -1,7 +1,13 @@
-import numpy as np
 from typing import Dict
 
-from src.env.data.game import N_DICES, N_DICE_FACES, N_TRAITS, TRAIT_DISTRIBUTION
+import numpy as np
+
+from src.env.data.game import (
+    N_DICES,
+    N_DICE_FACES,
+    N_TRAITS,
+    TRAIT_DISTRIBUTION,
+)
 from src.env.data.traits import TRAITS
 from src.env.dice_face import DiceFace
 from src.env.trait_effect import TraitEffect

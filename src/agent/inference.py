@@ -1,12 +1,14 @@
-import pathlib
 import argparse
+import pathlib
 
 import gymnasium as gym
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import PPO
 
 from src.agent.utils.summary import log_summary
-from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
+from src.env.utils.env import get_damage_diff_percent, has_damage_been_done
+
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_checker import check_env
+
 
 n_rerolls = 3
 timesteps = 100000
@@ -21,16 +23,13 @@ parser.add_argument(
     "--model_path",
     default=model_path,
     type=str,
-    help="The path to use for saving the trained sb3 model after training is complete. Saved model can be used later "
-    "to resume training. Extension will be set to .zip",
+    help="Used for saving the trained model",
 )
 parser.add_argument(
     "--timesteps",
     default=timesteps,
     type=int,
-    help="The number of environment steps to train for, default is 1_000_000. If resuming from a saved model, "
-    "it will continue training for this amount of steps from the saved state without counting previously trained "
-    "steps",
+    help="The number of environment steps to train for, default is 1_000_000.",
 )
 parser.add_argument(
     "--render",
@@ -103,4 +102,6 @@ for i in range(args.timesteps):
 env.close()
 
 print("\n======== Inference finished ========")
-log_summary(wins, losses, diffs, damage_dealt, damage_taken, rolls, hands, battles_won)
+log_summary(
+    wins, losses, diffs, damage_dealt, damage_taken, rolls, hands, battles_won
+)

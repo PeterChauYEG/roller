@@ -15,7 +15,9 @@ class DiceFace:
         self.value = self.generate_value()
 
     def generate_value(self):
-        return np.random.randint(self.n_min_face_value, self.n_max_face_value + 1)
+        return np.random.randint(
+            self.n_min_face_value, self.n_max_face_value + 1
+        )
 
     # getters
     def get_trait(self):

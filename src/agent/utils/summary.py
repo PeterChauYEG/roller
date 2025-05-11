@@ -1,18 +1,20 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 import numpy as np
 
+import seaborn as sns
 
-def log_rolls(rolls):
+
+def log_rolls(rolls: int) -> None:
     print("Rolls: ", rolls)
 
 
-def log_win_losses(w, l):
+def log_win_losses(wins: int, losses: int) -> None:
     print("\n======== Summary of wins - losses ========")
-    print("Wins: ", w)
-    print("Losses: ", l)
-    if w + l != 0:
-        print("Winrate: ", round(w / (w + l) * 100, 2), "%")
+    print("Wins: ", wins)
+    print("Losses: ", losses)
+    if wins + losses != 0:
+        print("Winrate: ", round(wins / (wins + losses) * 100, 2), "%")
     else:
         print("No games completed")
 
@@ -63,23 +65,36 @@ def plot_histogram(title, xlabel, ylabel, mean, median, best, worst, data):
     plt.show()
 
 
-def log_summary(w, l, diffs, damage_dealt, damage_taken, rolls, hands, battles_won):
-    log_win_losses(w, l)
+def log_summary(
+    wins, losses, diffs, damage_dealt, damage_taken, rolls, hands, battles_won
+):
+    log_win_losses(wins, losses)
     log_rolls(rolls)
 
     diff_mean, diff_median, diff_best, diff_worst = log_stats(
         "Difference of damage dealt vs taken (%)", diffs
     )
-    damage_dealt_mean, damage_dealt_median, damage_dealt_best, damage_dealt_worst = (
-        log_stats("Damage dealt", damage_dealt)
+    (
+        damage_dealt_mean,
+        damage_dealt_median,
+        damage_dealt_best,
+        damage_dealt_worst,
+    ) = log_stats("Damage dealt", damage_dealt)
+    (
+        damage_taken_mean,
+        damage_taken_median,
+        damage_taken_best,
+        damage_taken_worst,
+    ) = log_stats("Damage taken", damage_taken)
+    hands_mean, hands_median, hands_best, hands_worst = log_stats(
+        "Hands / game", hands
     )
-    damage_taken_mean, damage_taken_median, damage_taken_best, damage_taken_worst = (
-        log_stats("Damage taken", damage_taken)
-    )
-    hands_mean, hands_median, hands_best, hands_worst = log_stats("Hands / game", hands)
-    battles_won_mean, battles_won_median, battles_won_best, battles_won_worst = (
-        log_stats("Battles won", battles_won)
-    )
+    (
+        battles_won_mean,
+        battles_won_median,
+        battles_won_best,
+        battles_won_worst,
+    ) = log_stats("Battles won", battles_won)
 
     plot_histogram(
         "Difference of damage dealt vs taken",
