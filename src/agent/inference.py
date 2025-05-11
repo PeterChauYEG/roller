@@ -9,8 +9,8 @@ from src.agent.utils.summary import log_summary
 from src.env.utils.env import has_damage_been_done, get_damage_diff_percent
 
 n_rerolls = 3
-timesteps=100000
-n_log_interval=10000
+timesteps = 100000
+n_log_interval = 10000
 
 experiment_dir = "experiments"
 model_path = "model.zip"
@@ -22,15 +22,15 @@ parser.add_argument(
     default=model_path,
     type=str,
     help="The path to use for saving the trained sb3 model after training is complete. Saved model can be used later "
-         "to resume training. Extension will be set to .zip",
+    "to resume training. Extension will be set to .zip",
 )
 parser.add_argument(
     "--timesteps",
     default=timesteps,
     type=int,
     help="The number of environment steps to train for, default is 1_000_000. If resuming from a saved model, "
-         "it will continue training for this amount of steps from the saved state without counting previously trained "
-         "steps",
+    "it will continue training for this amount of steps from the saved state without counting previously trained "
+    "steps",
 )
 parser.add_argument(
     "--render",
@@ -81,9 +81,7 @@ for i in range(args.timesteps):
     diff = 0
     if has_damage_been_done(obs["damage_done"]):
         diff = get_damage_diff_percent(
-            obs["damage_done"],
-            obs["player"][0],
-            obs["enemy"][0]
+            obs["damage_done"], obs["player"][0], obs["enemy"][0]
         )
         diffs.append(round(diff, 2))
 

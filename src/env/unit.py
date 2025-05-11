@@ -1,29 +1,23 @@
 import numpy as np
 
+
 class Unit:
     def __init__(
-            self,
-            min_hp,
-            max_hp,
-            min_attack,
-            max_attack,
-            min_defense,
-            max_defense
+        self,
+        min_hp,
+        max_hp,
+        min_attack,
+        max_attack,
+        min_defense,
+        max_defense,
+        level=1,
     ):
-        self.hp_range = dict(
-            min=min_hp,
-            max=max_hp
-        )
-        self.attack_range = dict(
-            min=min_attack,
-            max=max_attack
-        )
-        self.defense_range = dict(
-            min=min_defense,
-            max=max_defense
-        )
+        self.level = level
+        self.hp_range = dict(min=min_hp, max=max_hp)
+        self.attack_range = dict(min=min_attack, max=max_attack)
+        self.defense_range = dict(min=min_defense, max=max_defense)
 
-        hp = self.generate_player_hp()
+        hp = self.generate_hp()
         self.hp = hp
         self.max_hp = hp
 
@@ -42,22 +36,18 @@ class Unit:
         return effective_damage
 
     # generators
-    def generate_player_hp(self):
-        return np.random.randint(
-            self.hp_range["min"],
-            self.hp_range["max"] + 1
+    def generate_hp(self):
+        return (
+            np.random.randint(self.hp_range["min"], self.hp_range["max"] + 1)
+            * self.level
         )
 
     def generate_attack(self):
-        return np.random.randint(
-            self.attack_range["min"],
-            self.attack_range["max"] + 1
-        )
+        return np.random.randint(self.attack_range["min"], self.attack_range["max"] + 1)
 
     def generate_defense(self):
         return np.random.randint(
-            self.defense_range["min"],
-            self.defense_range["max"] + 1
+            self.defense_range["min"], self.defense_range["max"] + 1
         )
 
     # setters
@@ -79,11 +69,6 @@ class Unit:
 
     # obs
     def get_obs(self):
-        arr = [
-            self.max_hp,
-            self.hp,
-            self.attack,
-            self.defense
-        ]
+        arr = [self.max_hp, self.hp, self.attack, self.defense]
 
         return np.array(arr, dtype=np.int16)

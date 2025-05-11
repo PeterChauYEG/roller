@@ -21,6 +21,13 @@ pip install -r requirements.txt
 
 --------------
 
+## lint 
+```bash
+flake8 src; black src
+```
+
+--------------
+
 ## train
 ```
 python -m src.agent.trainer --timesteps 1000000 \

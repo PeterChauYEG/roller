@@ -12,12 +12,12 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 
 experiment_dir = "experiments"
 
-save_freq=200000
-total_timesteps=100
+save_freq = 200000
+total_timesteps = 100
 save_model_path = "model.zip"
 experiment_name = "experiment"
 base_learning_rate = 0.0003
-batch_size=64
+batch_size = 64
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
 
@@ -36,30 +36,30 @@ parser.add_argument(
     default=False,
     action="store_true",
     help="Use a linear LR schedule for training. If set, learning rate will decrease until it reaches 0 at "
-         "--timesteps"
-         "value. Note: On resuming training, the schedule will reset. If disabled, constant LR will be used.",
+    "--timesteps"
+    "value. Note: On resuming training, the schedule will reset. If disabled, constant LR will be used.",
 )
 parser.add_argument(
     "--experiment_name",
     default=experiment_name,
     type=str,
     help="The name of the experiment, which will be displayed in tensorboard and "
-         "for checkpoint directory and name (if enabled).",
+    "for checkpoint directory and name (if enabled).",
 )
 parser.add_argument(
     "--save_model_path",
     default=save_model_path,
     type=str,
     help="The path to use for saving the trained sb3 model after training is complete. Saved model can be used later "
-         "to resume training. Extension will be set to .zip",
+    "to resume training. Extension will be set to .zip",
 )
 parser.add_argument(
     "--timesteps",
     default=total_timesteps,
     type=int,
     help="The number of environment steps to train for, default is 1_000_000. If resuming from a saved model, "
-         "it will continue training for this amount of steps from the saved state without counting previously trained "
-         "steps",
+    "it will continue training for this amount of steps from the saved state without counting previously trained "
+    "steps",
 )
 parser.add_argument(
     "--batch_size",
@@ -73,6 +73,7 @@ args, extras = parser.parse_known_args()
 # paths
 path_checkpoint = os.path.join(experiment_dir, args.experiment_name + "_checkpoints")
 abs_path_checkpoint = os.path.abspath(path_checkpoint)
+
 
 # LR
 # LR schedule code snippet from:
@@ -97,7 +98,12 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
     return func
 
-learning_rate = base_learning_rate if not args.linear_lr_schedule else linear_schedule(base_learning_rate)
+
+learning_rate = (
+    base_learning_rate
+    if not args.linear_lr_schedule
+    else linear_schedule(base_learning_rate)
+)
 
 env = gym.make("Roller-v1", render_mode="human")
 check_env(env)
