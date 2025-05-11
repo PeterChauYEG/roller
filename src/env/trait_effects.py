@@ -4,6 +4,7 @@ from src.env.trait_effect import TraitEffect
 
 
 class TraitEffects:
+
     def __init__(self, effects: Dict[int, Union[[TraitEffect], None]]):
         self.effects = effects
 

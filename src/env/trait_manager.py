@@ -14,11 +14,12 @@ from src.env.trait_effect import TraitEffect
 
 
 class TraitManager:
+
     def __init__(self):
         self.n_dices = N_DICES
         self.n_dice_faces = N_DICE_FACES
         self.n_traits = N_TRAITS
-        self.trait_keys = [key for key in TRAITS.keys()]
+        self.trait_keys = list(TRAITS.keys())
         self.traits = self.__generate_dice_face_traits()
 
     # generators

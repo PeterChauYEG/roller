@@ -5,11 +5,12 @@ from src.env.data.traits import TRAITS
 
 
 class DiceFace:
+
     def __init__(self, trait):
         self.n_max_face_value = N_MAX_FACE_VALUE
         self.n_min_face_value = N_MIN_FACE_VALUE
         self.n_traits = N_TRAITS
-        self.trait_keys = [key for key in TRAITS.keys()]
+        self.trait_keys = list(TRAITS.keys())
 
         self.trait = trait
         self.value = self.generate_value()

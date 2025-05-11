@@ -5,7 +5,7 @@ from typing import Callable
 
 import gymnasium as gym
 
-import src.env
+import src.env  # noqa: F401
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
@@ -120,9 +120,10 @@ checkpoint_callback = CheckpointCallback(
     name_prefix=args.experiment_name,
 )
 
-learn_arguments = dict(
-    total_timesteps=args.timesteps, callback=checkpoint_callback
-)
+learn_arguments = {
+    "total_timesteps": args.timesteps,
+    "callback": checkpoint_callback,
+}
 
 model.learn(**learn_arguments)
 

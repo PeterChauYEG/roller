@@ -5,6 +5,7 @@ from src.env.trait_effects import TraitEffects
 
 
 class Trait:
+
     def __init__(self, name: str, effects: TraitEffects):
         self.name = name
         self.effects = effects

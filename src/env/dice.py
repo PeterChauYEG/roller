@@ -5,6 +5,7 @@ from src.env.trait_manager import TraitManager
 
 
 class Dice:
+
     def __init__(self, index, trait_manager: TraitManager):
         self.trait_manager = trait_manager
         self.index = index

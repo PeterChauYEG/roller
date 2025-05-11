@@ -25,7 +25,7 @@ TRAITS = {
                 2: None,
                 3: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=5,
                         operation=OperationType.MULTIPLY,
                     )
@@ -33,14 +33,14 @@ TRAITS = {
                 4: None,
                 5: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=15,
                         operation=OperationType.MULTIPLY,
                     )
                 ],
                 6: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=30,
                         operation=OperationType.MULTIPLY,
                     )
@@ -56,7 +56,7 @@ TRAITS = {
                 2: None,
                 3: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=5,
                         operation=OperationType.MULTIPLY,
                     )
@@ -64,14 +64,14 @@ TRAITS = {
                 4: None,
                 5: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=15,
                         operation=OperationType.MULTIPLY,
                     )
                 ],
                 6: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=30,
                         operation=OperationType.MULTIPLY,
                     )
@@ -86,35 +86,35 @@ TRAITS = {
                 1: None,
                 2: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=10,
                         operation=OperationType.ADD,
                     )
                 ],
                 3: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=15,
                         operation=OperationType.ADD,
                     )
                 ],
                 4: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=20,
                         operation=OperationType.ADD,
                     )
                 ],
                 5: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=30,
                         operation=OperationType.ADD,
                     )
                 ],
                 6: [
                     TraitEffect(
-                        type=EffectType.ATTACK,
+                        effect_type=EffectType.ATTACK,
                         value=40,
                         operation=OperationType.ADD,
                     )
@@ -129,35 +129,35 @@ TRAITS = {
                 1: None,
                 2: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=10,
                         operation=OperationType.ADD,
                     )
                 ],
                 3: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=15,
                         operation=OperationType.ADD,
                     )
                 ],
                 4: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=20,
                         operation=OperationType.ADD,
                     )
                 ],
                 5: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=30,
                         operation=OperationType.ADD,
                     )
                 ],
                 6: [
                     TraitEffect(
-                        type=EffectType.DEFENSE,
+                        effect_type=EffectType.DEFENSE,
                         value=40,
                         operation=OperationType.ADD,
                     )

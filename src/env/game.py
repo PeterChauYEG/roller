@@ -37,11 +37,11 @@ def apply_trait_effects(effects, attack_total, defense_total):
 
 
 def apply_trait_effect(effect: TraitEffect, attack_total, defense_total):
-    type = effect.get_type()
+    effect_type = effect.get_type()
     operation = effect.get_operation()
     value = effect.get_value()
 
-    if type == EffectType.ATTACK:
+    if effect_type == EffectType.ATTACK:
         if operation == OperationType.ADD:
             attack_total += value
         elif operation == OperationType.SUBTRACT:
@@ -50,7 +50,7 @@ def apply_trait_effect(effect: TraitEffect, attack_total, defense_total):
             attack_total *= value
         elif operation == OperationType.DIVIDE:
             attack_total /= value
-    elif type == EffectType.DEFENSE:
+    elif effect_type == EffectType.DEFENSE:
         if operation == OperationType.ADD:
             defense_total += value
         elif operation == OperationType.SUBTRACT:
@@ -107,6 +107,7 @@ def get_traits_obs():
 
 
 class Game:
+
     def __init__(self):
         self.n_max_rolls = N_MAX_ROLLS
         self.n_remaining_rolls = N_MAX_ROLLS
@@ -312,8 +313,6 @@ class Game:
     def get_roll_results_totals_obs(self):
         attack_total, defense_total = self.get_roll_results_totals()
 
-        # attack_total, defense_total = self.apply_traits(attack_total, defense_total)
-
         return np.array(
             [float(attack_total), float(defense_total)], dtype=np.float16
         )
@@ -408,16 +407,16 @@ class Game:
         if prev_damage_done[0] != 0 or prev_damage_done[1] != 0:
             damage_done = np.array(prev_damage_done, dtype=np.int16)
 
-        return dict(
-            all_dice_face_traits=all_dice_face_traits,
-            all_dice_face_values=all_dice_face_values,
-            damage_done=damage_done,
-            enemy=enemy,
-            n_remaining_rolls=np.array(
+        return {
+            "all_dice_face_traits": all_dice_face_traits,
+            "all_dice_face_values": all_dice_face_values,
+            "damage_done": damage_done,
+            "enemy": enemy,
+            "n_remaining_rolls": np.array(
                 [self.n_remaining_rolls], dtype=np.int16
             ),
-            player=player,
-            roll_result_traits=roll_result_traits,
-            roll_result_values=roll_result_values,
-            traits=traits,
-        )
+            "player": player,
+            "roll_result_traits": roll_result_traits,
+            "roll_result_values": roll_result_values,
+            "traits": traits,
+        }

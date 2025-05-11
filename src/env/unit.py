@@ -13,9 +13,9 @@ class Unit:
         level=1,
     ):
         self.level = level
-        self.hp_range = dict(min=min_hp, max=max_hp)
-        self.attack_range = dict(min=min_attack, max=max_attack)
-        self.defense_range = dict(min=min_defense, max=max_defense)
+        self.hp_range = {"min": min_hp, "max": max_hp}
+        self.attack_range = {"min": min_attack, "max": max_attack}
+        self.defense_range = {"min": min_defense, "max": max_defense}
 
         hp = self.generate_hp()
         self.hp = hp

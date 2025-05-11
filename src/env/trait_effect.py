@@ -2,8 +2,11 @@ from src.env.game_enums import EffectType, OperationType
 
 
 class TraitEffect:
-    def __init__(self, type: EffectType, value: int, operation: OperationType):
-        self.type = type
+
+    def __init__(
+        self, effect_type: EffectType, value: int, operation: OperationType
+    ):
+        self.type = effect_type
         self.value = value
         self.operation = operation
 
