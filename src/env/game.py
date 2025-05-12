@@ -18,9 +18,9 @@ from src.env.data.game import (
     N_MAX_ROLLS,
 )
 from src.env.data.traits import TRAITS
-from src.env.dice_face import DiceFace
 from src.env.dice_manager import DiceManager
-from src.env.game_enums import DiceType, WinnerType
+from src.env.game_enums import WinnerType
+from src.env.roll_manager import RollManager
 from src.env.trait_manager import TraitManager
 from src.env.unit import Unit
 
@@ -55,8 +55,8 @@ class Game:
 
         self.trait_manager = TraitManager()
         self.dice_manager = DiceManager(self.trait_manager)
+        self.roll_manager = RollManager(self.dice_manager)
 
-        self.roll_results = []
         self.damage_done = [0, 0]
 
         self.reset()
@@ -112,8 +112,7 @@ class Game:
         new_battle=False,
     ):
         self.n_remaining_rolls = self.n_max_rolls
-        self.roll_results = []
-        self.roll_all_dices()
+        self.roll_manager.roll_all_dices()
         self.reset_rolls()
 
         prev_damage_done = self.damage_done
@@ -131,11 +130,6 @@ class Game:
             new_battle,
         )
 
-    def roll_all_dices(self):
-        for dice_i in range(self.n_dices):
-            face = self.roll_dice(dice_i)
-            self.roll_results.append(face)
-
     def player_turn(self, roll_dices_i):
         game_over = False
         rolled = True
@@ -150,8 +144,7 @@ class Game:
                 if roll_dices_i[i] == 0:
                     continue
 
-                face = self.roll_dice(i)
-                self.roll_results[i] = face
+                self.roll_manager.roll_dice(i)
 
             self.consume_roll()
 
@@ -183,13 +176,6 @@ class Game:
             new_battle,
         )
 
-    def roll_dice(self, dice_i: int) -> DiceFace:
-        face_i = np.random.randint(0, self.n_faces)
-        dice = self.dice_manager.get_dice(dice_i)
-        face = dice.get_face(face_i)
-
-        return face
-
     def consume_roll(self):
         self.n_remaining_rolls -= 1
 
@@ -197,7 +183,7 @@ class Game:
         self.n_remaining_rolls = self.n_max_rolls
 
     def handle_fight(self):
-        attack, defense = self.get_roll_results_totals()
+        attack, defense = self.calculate_roll_results()
 
         self.player.set_attack(attack)
         self.player.set_defense(defense)
@@ -207,9 +193,11 @@ class Game:
 
         self.set_damage_done(damage_to_player, damage_to_enemy)
 
+    # setters ===============================================
     def set_damage_done(self, damage_to_player, damage_to_enemy):
         self.damage_done = [damage_to_player, damage_to_enemy]
 
+    # getters ===============================================
     def get_winner(self):
         if self.player.get_hp() <= 0:
             return WinnerType.ENEMY
@@ -219,62 +207,41 @@ class Game:
 
         return WinnerType.NONE
 
-    # getters ===============================================
-    def get_roll_results_totals_observation(self):
-        attack_total, defense_total = self.get_roll_results_totals()
+    def calculate_roll_results(self):
+        roll_results = self.roll_manager.get_roll_results()
+        face_traits = self.trait_manager.get_face_traits(roll_results)
+
+        attack_total, defense_total = (
+            self.roll_manager.get_roll_results_totals_by_dice_type()
+        )
+
+        attack_total, defense_total = self.trait_manager.apply_traits(
+            attack_total, defense_total, face_traits
+        )
+
+        return attack_total, defense_total
+
+    def get_roll_results_observation(self):
+        attack_total, defense_total = self.calculate_roll_results()
 
         return np.array(
             [float(attack_total), float(defense_total)], dtype=np.float16
         )
 
-    def get_roll_results_totals(self):
-        attack_total = 0
-        defense_total = 0
-
-        for i, face in enumerate(self.roll_results):
-            dice_type = self.dice_manager.get_dice(i).get_type()
-            face_value = face.get_value()
-
-            if dice_type == DiceType.ATTACK:
-                attack_total += face_value
-            elif dice_type == DiceType.DEFENSE:
-                defense_total += face_value
-
-        attack_total, defense_total = self.trait_manager.apply_traits(
-            attack_total, defense_total, self.roll_results
-        )
-        return attack_total, defense_total
-
     def get_damage_done_observation(self):
         return np.array(self.damage_done, dtype=np.int16)
 
-    def get_roll_result_observation(self):
-        roll_result_values = []
-        roll_result_traits = []
-
-        for i, face in enumerate(self.roll_results):
-            face_value = face.get_value()
-            face_trait = face.get_trait()
-
-            roll_result_values.append(face_value)
-            roll_result_traits.append(face_trait)
-
-        return (
-            np.array(roll_result_values, dtype=np.int16),
-            np.array(roll_result_traits, dtype=np.int16),
-        )
-
     def get_observation(self, prev_damage_done=[0, 0]):
-        roll_results_totals = self.get_roll_results_totals_observation()
+        roll_results = self.get_roll_results_observation()
 
-        self.player.set_attack(roll_results_totals[0])
-        self.player.set_defense(roll_results_totals[1])
+        self.player.set_attack(roll_results[0])
+        self.player.set_defense(roll_results[1])
 
         enemy = self.enemy.get_observation()
         player = self.player.get_observation()
 
         roll_result_values, roll_result_traits = (
-            self.get_roll_result_observation()
+            self.roll_manager.get_observation()
         )
         all_dice_face_values, all_dice_face_traits = (
             self.dice_manager.get_observation()

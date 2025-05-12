@@ -52,7 +52,13 @@ def calculate_roll_results(roll_result_traits, roll_result_values):
     res = []
     for i, trait in enumerate(roll_result_traits):
         value = roll_result_values[i]
-        res.append(f"{value} (trait {trait})")
+
+        output = f"{value} (trait {trait})"
+
+        if trait == 0:
+            output = f"{value}"
+
+        res.append(output)
 
     return [res]
 

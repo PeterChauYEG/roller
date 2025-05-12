@@ -40,10 +40,11 @@ class TraitManager:
         return self.traits[dice_i][face_i]
 
     def apply_traits(
-        self, attack_total: int, defense_total: int, roll_results: [DiceFace]
+        self,
+        attack_total: int,
+        defense_total: int,
+        face_traits: Dict[int, int],
     ) -> (int, int):
-        face_traits = self.get_face_traits(roll_results)
-
         effects: [TraitEffect] = self.get_trait_effects(face_traits)
 
         sorted_effects = self.sort_traits_effects(effects)
