@@ -27,11 +27,13 @@ TRAITS_HEADERS = [
 ]
 
 
-def render_table(headers, data):
+def render_table(headers, data) -> None:
     print(tabulate(data, headers, tablefmt="simple_outline"))
 
 
-def calculate_info(damage_done, reward, n_remaining_rolls):
+def calculate_info(
+    damage_done: list[int, int], reward: int, n_remaining_rolls: int
+):
     reward = reward if reward is not None else 0
     damage_taken = damage_done[0]
     damage_dealt = damage_done[1]

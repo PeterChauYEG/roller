@@ -31,6 +31,10 @@ class TraitManager:
             size=(self.n_dices, self.n_dice_faces),
         )
 
+    # reset
+    def reset(self) -> None:
+        self.traits = self.__generate_dice_face_traits()
+
     # getters
     def get_trait(self, dice_i: int, face_i: int) -> int:
         return self.traits[dice_i][face_i]
@@ -50,7 +54,7 @@ class TraitManager:
         return attack_total, defense_total
 
     @staticmethod
-    def get_observation():
+    def get_observation() -> np.ndarray[int]:
         traits = []
         for i in range(N_TRAITS):
             trait = TRAITS[i]
