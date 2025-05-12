@@ -21,5 +21,5 @@ class Trait:
 
         return self.get_current_effect(level - 1)
 
-    def get_obs(self) -> [[int, int, int, int]]:
-        return self.effects.get_obs()
+    def get_observation(self) -> [[int, int, int, int]]:
+        return self.effects.get_observation()

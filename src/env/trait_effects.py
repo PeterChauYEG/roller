@@ -15,7 +15,7 @@ class TraitEffects:
     def get_effect(self, level: int) -> TraitEffect:
         return self.effects[level]
 
-    def get_obs(self) -> [[int, int, int, int]]:
+    def get_observation(self) -> [[int, int, int, int]]:
         serialized_effects = []
 
         for level, effects in self.effects.items():
@@ -23,7 +23,7 @@ class TraitEffects:
                 continue
 
             for effect in effects:
-                effect = [level, *effect.get_obs()]
+                effect = [level, *effect.get_observation()]
                 serialized_effects.append(effect)
 
         return serialized_effects

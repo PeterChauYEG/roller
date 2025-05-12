@@ -70,7 +70,7 @@ class Unit:
         return self.attack
 
     # obs
-    def get_obs(self):
+    def get_observation(self):
         arr = [self.max_hp, self.hp, self.attack, self.defense]
 
         return np.array(arr, dtype=np.int16)

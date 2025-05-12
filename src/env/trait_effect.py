@@ -20,5 +20,5 @@ class TraitEffect:
     def get_operation(self) -> OperationType:
         return self.operation
 
-    def get_obs(self) -> [int, int, int]:
+    def get_observation(self) -> [int, int, int]:
         return [self.type.value, self.value, self.operation.value]

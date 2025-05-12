@@ -1,5 +1,5 @@
 from src.env.data.game import N_DICES, N_DICE_FACES, N_TRAITS
-from src.env.game import EffectType, OperationType
+from src.env.game_enums import EffectType, OperationType
 
 from tabulate import tabulate
 

@@ -16,94 +16,13 @@ from src.env.data.game import (
     N_DICES,
     N_DICE_FACES,
     N_MAX_ROLLS,
-    N_TRAITS,
 )
 from src.env.data.traits import TRAITS
 from src.env.dice import Dice
 from src.env.dice_face import DiceFace
-from src.env.game_enums import DiceType, EffectType, OperationType, WinnerType
-from src.env.trait_effect import TraitEffect
+from src.env.game_enums import DiceType, WinnerType
 from src.env.trait_manager import TraitManager
 from src.env.unit import Unit
-
-
-def apply_trait_effects(effects, attack_total, defense_total):
-    for effect in effects:
-        attack_total, defense_total = apply_trait_effect(
-            effect, attack_total, defense_total
-        )
-
-    return attack_total, defense_total
-
-
-def apply_trait_effect(effect: TraitEffect, attack_total, defense_total):
-    effect_type = effect.get_type()
-    operation = effect.get_operation()
-    value = effect.get_value()
-
-    if effect_type == EffectType.ATTACK:
-        if operation == OperationType.ADD:
-            attack_total += value
-        elif operation == OperationType.SUBTRACT:
-            attack_total -= value
-        elif operation == OperationType.MULTIPLY:
-            attack_total *= value
-        elif operation == OperationType.DIVIDE:
-            attack_total /= value
-    elif effect_type == EffectType.DEFENSE:
-        if operation == OperationType.ADD:
-            defense_total += value
-        elif operation == OperationType.SUBTRACT:
-            defense_total -= value
-        elif operation == OperationType.MULTIPLY:
-            defense_total *= value
-        elif operation == OperationType.DIVIDE:
-            defense_total /= value
-
-    return attack_total, defense_total
-
-
-def sort_traits_effects(trait_effects: [TraitEffect]):
-    sorted_traits = []
-    add_effects = []
-    subtract_effects = []
-    multiply_effects = []
-    divide_effects = []
-
-    for effect in trait_effects:
-        operation = effect.get_operation()
-
-        if operation == OperationType.ADD:
-            add_effects.append(effect)
-        if operation == OperationType.SUBTRACT:
-            subtract_effects.append(effect)
-        if operation == OperationType.MULTIPLY:
-            multiply_effects.append(effect)
-        if operation == OperationType.DIVIDE:
-            divide_effects.append(effect)
-
-    sorted_traits.extend(add_effects)
-    sorted_traits.extend(subtract_effects)
-    sorted_traits.extend(multiply_effects)
-    sorted_traits.extend(divide_effects)
-
-    return sorted_traits
-
-
-def get_traits_obs():
-    traits = []
-    for i in range(N_TRAITS):
-        trait = TRAITS[i]
-        serialized_trait = trait.get_obs()
-
-        if len(serialized_trait) == 0:
-            continue
-
-        # append each element of the serialized trait
-        for j in range(len(serialized_trait)):
-            traits.append(serialized_trait[j])
-
-    return np.array(traits, dtype=np.int16).flatten()
 
 
 class Game:
@@ -317,20 +236,6 @@ class Game:
             [float(attack_total), float(defense_total)], dtype=np.float16
         )
 
-    def apply_traits(self, attack_total, defense_total):
-        face_traits = self.trait_manager.get_face_traits(self.roll_results)
-
-        effects: [TraitEffect] = self.trait_manager.get_trait_effects(
-            face_traits
-        )
-
-        sorted_effects = sort_traits_effects(effects)
-        attack_total, defense_total = apply_trait_effects(
-            sorted_effects, attack_total, defense_total
-        )
-
-        return attack_total, defense_total
-
     def get_roll_results_totals(self):
         attack_total = 0
         defense_total = 0
@@ -344,8 +249,8 @@ class Game:
             elif dice_type == DiceType.DEFENSE:
                 defense_total += face_value
 
-        attack_total, defense_total = self.apply_traits(
-            attack_total, defense_total
+        attack_total, defense_total = self.trait_manager.apply_traits(
+            attack_total, defense_total, self.roll_results
         )
         return attack_total, defense_total
 
@@ -396,12 +301,12 @@ class Game:
         self.player.set_attack(roll_results_totals[0])
         self.player.set_defense(roll_results_totals[1])
 
-        enemy = self.enemy.get_obs()
-        player = self.player.get_obs()
+        enemy = self.enemy.get_observation()
+        player = self.player.get_observation()
 
         roll_result_values, roll_result_traits = self.get_roll_result_obs()
         all_dice_face_values, all_dice_face_traits = self.get_all_dices_obs()
-        traits = get_traits_obs()
+        traits = self.trait_manager.get_observation()
 
         damage_done = self.get_damage_done_obs()
         if prev_damage_done[0] != 0 or prev_damage_done[1] != 0:
